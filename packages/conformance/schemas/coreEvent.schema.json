@@ -1,0 +1,1582 @@
+{
+  "oneOf": [
+    {
+      "allOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "eventId": {
+              "type": "string"
+            },
+            "sequence": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "runId": {
+              "type": "string"
+            },
+            "messageId": {
+              "type": "string"
+            },
+            "timestamp": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "trace": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "traceId": {
+                  "type": "string"
+                },
+                "spanId": {
+                  "type": "string"
+                },
+                "parentSpanId": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "kind": {
+                  "enum": [
+                    "run",
+                    "model",
+                    "tool",
+                    "state",
+                    "transport"
+                  ]
+                },
+                "startedAt": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "endedAt": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "durationMs": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "attributes": {
+                  "type": "object",
+                  "additionalProperties": true
+                }
+              },
+              "required": [
+                "traceId",
+                "spanId",
+                "name",
+                "kind"
+              ]
+            }
+          },
+          "required": [
+            "eventId",
+            "sequence",
+            "runId",
+            "messageId",
+            "timestamp"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "type": {
+              "const": "RUN_STARTED"
+            },
+            "threadId": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "type"
+          ]
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "eventId": {
+              "type": "string"
+            },
+            "sequence": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "runId": {
+              "type": "string"
+            },
+            "messageId": {
+              "type": "string"
+            },
+            "timestamp": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "trace": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "traceId": {
+                  "type": "string"
+                },
+                "spanId": {
+                  "type": "string"
+                },
+                "parentSpanId": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "kind": {
+                  "enum": [
+                    "run",
+                    "model",
+                    "tool",
+                    "state",
+                    "transport"
+                  ]
+                },
+                "startedAt": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "endedAt": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "durationMs": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "attributes": {
+                  "type": "object",
+                  "additionalProperties": true
+                }
+              },
+              "required": [
+                "traceId",
+                "spanId",
+                "name",
+                "kind"
+              ]
+            }
+          },
+          "required": [
+            "eventId",
+            "sequence",
+            "runId",
+            "messageId",
+            "timestamp"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "type": {
+              "const": "TEXT_START"
+            },
+            "textId": {
+              "type": "string"
+            },
+            "role": {
+              "const": "assistant"
+            }
+          },
+          "required": [
+            "type",
+            "textId",
+            "role"
+          ]
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "eventId": {
+              "type": "string"
+            },
+            "sequence": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "runId": {
+              "type": "string"
+            },
+            "messageId": {
+              "type": "string"
+            },
+            "timestamp": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "trace": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "traceId": {
+                  "type": "string"
+                },
+                "spanId": {
+                  "type": "string"
+                },
+                "parentSpanId": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "kind": {
+                  "enum": [
+                    "run",
+                    "model",
+                    "tool",
+                    "state",
+                    "transport"
+                  ]
+                },
+                "startedAt": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "endedAt": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "durationMs": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "attributes": {
+                  "type": "object",
+                  "additionalProperties": true
+                }
+              },
+              "required": [
+                "traceId",
+                "spanId",
+                "name",
+                "kind"
+              ]
+            }
+          },
+          "required": [
+            "eventId",
+            "sequence",
+            "runId",
+            "messageId",
+            "timestamp"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "type": {
+              "const": "TEXT_DELTA"
+            },
+            "textId": {
+              "type": "string"
+            },
+            "delta": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "textId",
+            "delta"
+          ]
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "eventId": {
+              "type": "string"
+            },
+            "sequence": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "runId": {
+              "type": "string"
+            },
+            "messageId": {
+              "type": "string"
+            },
+            "timestamp": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "trace": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "traceId": {
+                  "type": "string"
+                },
+                "spanId": {
+                  "type": "string"
+                },
+                "parentSpanId": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "kind": {
+                  "enum": [
+                    "run",
+                    "model",
+                    "tool",
+                    "state",
+                    "transport"
+                  ]
+                },
+                "startedAt": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "endedAt": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "durationMs": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "attributes": {
+                  "type": "object",
+                  "additionalProperties": true
+                }
+              },
+              "required": [
+                "traceId",
+                "spanId",
+                "name",
+                "kind"
+              ]
+            }
+          },
+          "required": [
+            "eventId",
+            "sequence",
+            "runId",
+            "messageId",
+            "timestamp"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "type": {
+              "const": "TEXT_END"
+            },
+            "textId": {
+              "type": "string"
+            },
+            "text": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "textId",
+            "text"
+          ]
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "eventId": {
+              "type": "string"
+            },
+            "sequence": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "runId": {
+              "type": "string"
+            },
+            "messageId": {
+              "type": "string"
+            },
+            "timestamp": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "trace": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "traceId": {
+                  "type": "string"
+                },
+                "spanId": {
+                  "type": "string"
+                },
+                "parentSpanId": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "kind": {
+                  "enum": [
+                    "run",
+                    "model",
+                    "tool",
+                    "state",
+                    "transport"
+                  ]
+                },
+                "startedAt": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "endedAt": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "durationMs": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "attributes": {
+                  "type": "object",
+                  "additionalProperties": true
+                }
+              },
+              "required": [
+                "traceId",
+                "spanId",
+                "name",
+                "kind"
+              ]
+            }
+          },
+          "required": [
+            "eventId",
+            "sequence",
+            "runId",
+            "messageId",
+            "timestamp"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "type": {
+              "const": "REASONING_DELTA"
+            },
+            "reasoningId": {
+              "type": "string"
+            },
+            "delta": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "reasoningId",
+            "delta"
+          ]
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "eventId": {
+              "type": "string"
+            },
+            "sequence": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "runId": {
+              "type": "string"
+            },
+            "messageId": {
+              "type": "string"
+            },
+            "timestamp": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "trace": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "traceId": {
+                  "type": "string"
+                },
+                "spanId": {
+                  "type": "string"
+                },
+                "parentSpanId": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "kind": {
+                  "enum": [
+                    "run",
+                    "model",
+                    "tool",
+                    "state",
+                    "transport"
+                  ]
+                },
+                "startedAt": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "endedAt": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "durationMs": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "attributes": {
+                  "type": "object",
+                  "additionalProperties": true
+                }
+              },
+              "required": [
+                "traceId",
+                "spanId",
+                "name",
+                "kind"
+              ]
+            }
+          },
+          "required": [
+            "eventId",
+            "sequence",
+            "runId",
+            "messageId",
+            "timestamp"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "type": {
+              "const": "TOOL_CALL_START"
+            },
+            "toolCallId": {
+              "type": "string"
+            },
+            "toolId": {
+              "type": "string"
+            },
+            "toolName": {
+              "type": "string"
+            },
+            "modelName": {
+              "type": "string"
+            },
+            "toolRuntime": {
+              "enum": [
+                "server",
+                "client"
+              ]
+            },
+            "executionPolicy": {
+              "enum": [
+                "server",
+                "client_auto",
+                "client_interactive"
+              ]
+            },
+            "timeoutMs": {
+              "type": "number",
+              "minimum": 0
+            }
+          },
+          "required": [
+            "type",
+            "toolCallId",
+            "toolId",
+            "toolName",
+            "modelName",
+            "toolRuntime",
+            "executionPolicy"
+          ]
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "eventId": {
+              "type": "string"
+            },
+            "sequence": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "runId": {
+              "type": "string"
+            },
+            "messageId": {
+              "type": "string"
+            },
+            "timestamp": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "trace": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "traceId": {
+                  "type": "string"
+                },
+                "spanId": {
+                  "type": "string"
+                },
+                "parentSpanId": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "kind": {
+                  "enum": [
+                    "run",
+                    "model",
+                    "tool",
+                    "state",
+                    "transport"
+                  ]
+                },
+                "startedAt": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "endedAt": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "durationMs": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "attributes": {
+                  "type": "object",
+                  "additionalProperties": true
+                }
+              },
+              "required": [
+                "traceId",
+                "spanId",
+                "name",
+                "kind"
+              ]
+            }
+          },
+          "required": [
+            "eventId",
+            "sequence",
+            "runId",
+            "messageId",
+            "timestamp"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "type": {
+              "const": "TOOL_CALL_ARGS"
+            },
+            "toolCallId": {
+              "type": "string"
+            },
+            "toolId": {
+              "type": "string"
+            },
+            "delta": {
+              "type": "string"
+            },
+            "args": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "required": [
+            "type",
+            "toolCallId"
+          ]
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "eventId": {
+              "type": "string"
+            },
+            "sequence": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "runId": {
+              "type": "string"
+            },
+            "messageId": {
+              "type": "string"
+            },
+            "timestamp": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "trace": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "traceId": {
+                  "type": "string"
+                },
+                "spanId": {
+                  "type": "string"
+                },
+                "parentSpanId": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "kind": {
+                  "enum": [
+                    "run",
+                    "model",
+                    "tool",
+                    "state",
+                    "transport"
+                  ]
+                },
+                "startedAt": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "endedAt": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "durationMs": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "attributes": {
+                  "type": "object",
+                  "additionalProperties": true
+                }
+              },
+              "required": [
+                "traceId",
+                "spanId",
+                "name",
+                "kind"
+              ]
+            }
+          },
+          "required": [
+            "eventId",
+            "sequence",
+            "runId",
+            "messageId",
+            "timestamp"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "type": {
+              "const": "TOOL_CALL_END"
+            },
+            "toolCallId": {
+              "type": "string"
+            },
+            "toolId": {
+              "type": "string"
+            },
+            "toolName": {
+              "type": "string"
+            },
+            "modelName": {
+              "type": "string"
+            },
+            "toolRuntime": {
+              "enum": [
+                "server",
+                "client"
+              ]
+            },
+            "executionPolicy": {
+              "enum": [
+                "server",
+                "client_auto",
+                "client_interactive"
+              ]
+            },
+            "timeoutMs": {
+              "type": "number",
+              "minimum": 0
+            },
+            "args": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "required": [
+            "type",
+            "toolCallId",
+            "toolId",
+            "toolName",
+            "modelName",
+            "toolRuntime",
+            "executionPolicy",
+            "args"
+          ]
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "eventId": {
+              "type": "string"
+            },
+            "sequence": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "runId": {
+              "type": "string"
+            },
+            "messageId": {
+              "type": "string"
+            },
+            "timestamp": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "trace": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "traceId": {
+                  "type": "string"
+                },
+                "spanId": {
+                  "type": "string"
+                },
+                "parentSpanId": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "kind": {
+                  "enum": [
+                    "run",
+                    "model",
+                    "tool",
+                    "state",
+                    "transport"
+                  ]
+                },
+                "startedAt": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "endedAt": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "durationMs": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "attributes": {
+                  "type": "object",
+                  "additionalProperties": true
+                }
+              },
+              "required": [
+                "traceId",
+                "spanId",
+                "name",
+                "kind"
+              ]
+            }
+          },
+          "required": [
+            "eventId",
+            "sequence",
+            "runId",
+            "messageId",
+            "timestamp"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "type": {
+              "const": "TOOL_RESULT"
+            },
+            "toolCallId": {
+              "type": "string"
+            },
+            "toolId": {
+              "type": "string"
+            },
+            "toolName": {
+              "type": "string"
+            },
+            "modelName": {
+              "type": "string"
+            },
+            "toolRuntime": {
+              "enum": [
+                "server",
+                "client"
+              ]
+            },
+            "output": {},
+            "isError": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "type",
+            "toolCallId",
+            "toolName",
+            "output"
+          ]
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "eventId": {
+              "type": "string"
+            },
+            "sequence": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "runId": {
+              "type": "string"
+            },
+            "messageId": {
+              "type": "string"
+            },
+            "timestamp": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "trace": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "traceId": {
+                  "type": "string"
+                },
+                "spanId": {
+                  "type": "string"
+                },
+                "parentSpanId": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "kind": {
+                  "enum": [
+                    "run",
+                    "model",
+                    "tool",
+                    "state",
+                    "transport"
+                  ]
+                },
+                "startedAt": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "endedAt": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "durationMs": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "attributes": {
+                  "type": "object",
+                  "additionalProperties": true
+                }
+              },
+              "required": [
+                "traceId",
+                "spanId",
+                "name",
+                "kind"
+              ]
+            }
+          },
+          "required": [
+            "eventId",
+            "sequence",
+            "runId",
+            "messageId",
+            "timestamp"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "type": {
+              "const": "MODEL_CALL_START"
+            },
+            "modelCallId": {
+              "type": "string"
+            },
+            "provider": {
+              "type": "string"
+            },
+            "model": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "type",
+            "modelCallId"
+          ]
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "eventId": {
+              "type": "string"
+            },
+            "sequence": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "runId": {
+              "type": "string"
+            },
+            "messageId": {
+              "type": "string"
+            },
+            "timestamp": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "trace": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "traceId": {
+                  "type": "string"
+                },
+                "spanId": {
+                  "type": "string"
+                },
+                "parentSpanId": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "kind": {
+                  "enum": [
+                    "run",
+                    "model",
+                    "tool",
+                    "state",
+                    "transport"
+                  ]
+                },
+                "startedAt": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "endedAt": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "durationMs": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "attributes": {
+                  "type": "object",
+                  "additionalProperties": true
+                }
+              },
+              "required": [
+                "traceId",
+                "spanId",
+                "name",
+                "kind"
+              ]
+            }
+          },
+          "required": [
+            "eventId",
+            "sequence",
+            "runId",
+            "messageId",
+            "timestamp"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "type": {
+              "const": "MODEL_CALL_END"
+            },
+            "modelCallId": {
+              "type": "string"
+            },
+            "status": {
+              "enum": [
+                "running",
+                "completed",
+                "error",
+                "cancelled"
+              ]
+            },
+            "finishReason": {
+              "type": "string"
+            },
+            "provider": {
+              "type": "string"
+            },
+            "model": {
+              "type": "string"
+            },
+            "providerRequestId": {
+              "type": "string"
+            },
+            "usage": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "inputTokens": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "outputTokens": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "totalTokens": {
+                  "type": "number",
+                  "minimum": 0
+                }
+              }
+            }
+          },
+          "required": [
+            "type",
+            "modelCallId",
+            "status"
+          ]
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "eventId": {
+              "type": "string"
+            },
+            "sequence": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "runId": {
+              "type": "string"
+            },
+            "messageId": {
+              "type": "string"
+            },
+            "timestamp": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "trace": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "traceId": {
+                  "type": "string"
+                },
+                "spanId": {
+                  "type": "string"
+                },
+                "parentSpanId": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "kind": {
+                  "enum": [
+                    "run",
+                    "model",
+                    "tool",
+                    "state",
+                    "transport"
+                  ]
+                },
+                "startedAt": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "endedAt": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "durationMs": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "attributes": {
+                  "type": "object",
+                  "additionalProperties": true
+                }
+              },
+              "required": [
+                "traceId",
+                "spanId",
+                "name",
+                "kind"
+              ]
+            }
+          },
+          "required": [
+            "eventId",
+            "sequence",
+            "runId",
+            "messageId",
+            "timestamp"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "type": {
+              "const": "STATE_DELTA"
+            },
+            "delta": {
+              "type": "object",
+              "additionalProperties": true
+            }
+          },
+          "required": [
+            "type",
+            "delta"
+          ]
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "eventId": {
+              "type": "string"
+            },
+            "sequence": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "runId": {
+              "type": "string"
+            },
+            "messageId": {
+              "type": "string"
+            },
+            "timestamp": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "trace": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "traceId": {
+                  "type": "string"
+                },
+                "spanId": {
+                  "type": "string"
+                },
+                "parentSpanId": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "kind": {
+                  "enum": [
+                    "run",
+                    "model",
+                    "tool",
+                    "state",
+                    "transport"
+                  ]
+                },
+                "startedAt": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "endedAt": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "durationMs": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "attributes": {
+                  "type": "object",
+                  "additionalProperties": true
+                }
+              },
+              "required": [
+                "traceId",
+                "spanId",
+                "name",
+                "kind"
+              ]
+            }
+          },
+          "required": [
+            "eventId",
+            "sequence",
+            "runId",
+            "messageId",
+            "timestamp"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "type": {
+              "const": "RUN_FINISHED"
+            },
+            "finishReason": {
+              "enum": [
+                "completed",
+                "awaiting_client_tool",
+                "cancelled"
+              ]
+            },
+            "pendingToolCallId": {
+              "type": "string"
+            },
+            "pendingToolCallIds": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "type",
+            "finishReason"
+          ]
+        }
+      ]
+    },
+    {
+      "allOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "eventId": {
+              "type": "string"
+            },
+            "sequence": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "runId": {
+              "type": "string"
+            },
+            "messageId": {
+              "type": "string"
+            },
+            "timestamp": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "trace": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "traceId": {
+                  "type": "string"
+                },
+                "spanId": {
+                  "type": "string"
+                },
+                "parentSpanId": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "kind": {
+                  "enum": [
+                    "run",
+                    "model",
+                    "tool",
+                    "state",
+                    "transport"
+                  ]
+                },
+                "startedAt": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "endedAt": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "durationMs": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "attributes": {
+                  "type": "object",
+                  "additionalProperties": true
+                }
+              },
+              "required": [
+                "traceId",
+                "spanId",
+                "name",
+                "kind"
+              ]
+            }
+          },
+          "required": [
+            "eventId",
+            "sequence",
+            "runId",
+            "messageId",
+            "timestamp"
+          ]
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "type": {
+              "const": "RUN_ERROR"
+            },
+            "error": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "code": {
+                  "type": "string"
+                },
+                "message": {
+                  "type": "string"
+                },
+                "retryable": {
+                  "type": "boolean"
+                },
+                "details": {
+                  "type": "object",
+                  "additionalProperties": true
+                }
+              },
+              "required": [
+                "code",
+                "message"
+              ]
+            }
+          },
+          "required": [
+            "type",
+            "error"
+          ]
+        }
+      ]
+    }
+  ]
+}

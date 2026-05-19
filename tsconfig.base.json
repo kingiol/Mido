@@ -1,0 +1,28 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "strict": true,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "jsx": "react-jsx",
+    "types": ["node", "vitest/globals"],
+    "baseUrl": ".",
+    "paths": {
+      "@mido/protocol-core": ["packages/protocol-core/src/index.ts"],
+      "@mido/protocol-agui": ["packages/protocol-agui/src/index.ts"],
+      "@mido/mcp-core": ["packages/mcp-core/src/index.ts"],
+      "@mido/server-sdk": ["packages/server-sdk/src/index.ts"],
+      "@mido/client-core": ["packages/client-core/src/index.ts"],
+      "@mido/client-web": ["packages/client-web/src/index.tsx"],
+      "@mido/toolkit-core": ["packages/toolkit-core/src/index.ts"],
+      "@mido/conformance": ["packages/conformance/src/index.ts"]
+    }
+  }
+}

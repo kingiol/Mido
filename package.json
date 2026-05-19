@@ -1,0 +1,49 @@
+{
+  "name": "mido-agent-sdk",
+  "version": "0.1.0",
+  "description": "TypeScript SDK for server-run agent loops with resumable client-side tools, MCP integration, AG-UI adapters, and durable protocol contracts.",
+  "keywords": [
+    "ai-agents",
+    "agent-sdk",
+    "typescript",
+    "mcp",
+    "model-context-protocol",
+    "ag-ui",
+    "tool-calling",
+    "human-in-the-loop",
+    "resumable-streaming",
+    "react"
+  ],
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@10.33.1",
+  "scripts": {
+    "build": "pnpm -r --filter './packages/*' build",
+    "lint": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "generate:schemas": "tsx packages/conformance/src/generate-schemas.ts",
+    "demo": "concurrently -k -n server,client -c green,cyan \"pnpm demo:server\" \"pnpm demo:client\"",
+    "demo:server": "tsx apps/web-demo/server.ts",
+    "demo:client": "vite --config apps/web-demo/vite.config.ts",
+    "demo:build": "vite build --config apps/web-demo/vite.config.ts"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.7.0",
+    "@testing-library/react": "^14.2.1",
+    "@types/node": "^22.10.2",
+    "@types/react": "^18.2.48",
+    "@types/react-dom": "^18.2.18",
+    "ajv": "^8.17.1",
+    "concurrently": "^9.2.1",
+    "dotenv": "^16.6.1",
+    "jsdom": "^24.1.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "tsup": "^8.3.5",
+    "tsx": "^4.19.2",
+    "typescript": "^5.9.3",
+    "vite": "^5.4.19",
+    "vitest": "^2.1.8"
+  }
+}

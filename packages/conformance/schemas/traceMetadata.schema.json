@@ -1,0 +1,49 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "traceId": {
+      "type": "string"
+    },
+    "spanId": {
+      "type": "string"
+    },
+    "parentSpanId": {
+      "type": "string"
+    },
+    "name": {
+      "type": "string"
+    },
+    "kind": {
+      "enum": [
+        "run",
+        "model",
+        "tool",
+        "state",
+        "transport"
+      ]
+    },
+    "startedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "endedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "durationMs": {
+      "type": "number",
+      "minimum": 0
+    },
+    "attributes": {
+      "type": "object",
+      "additionalProperties": true
+    }
+  },
+  "required": [
+    "traceId",
+    "spanId",
+    "name",
+    "kind"
+  ]
+}

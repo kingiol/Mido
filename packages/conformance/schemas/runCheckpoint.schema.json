@@ -1,0 +1,378 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "runId": {
+      "type": "string"
+    },
+    "threadId": {
+      "type": "string"
+    },
+    "sequence": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "messages": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "role": {
+            "enum": [
+              "system",
+              "user",
+              "assistant",
+              "tool",
+              "summary"
+            ]
+          },
+          "content": {
+            "type": "array",
+            "items": {
+              "oneOf": [
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "type": {
+                      "const": "text"
+                    },
+                    "text": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "type",
+                    "text"
+                  ]
+                },
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "type": {
+                      "const": "reasoning"
+                    },
+                    "text": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "type",
+                    "text"
+                  ]
+                },
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "type": {
+                      "const": "tool-call"
+                    },
+                    "toolCallId": {
+                      "type": "string"
+                    },
+                    "toolId": {
+                      "type": "string"
+                    },
+                    "toolName": {
+                      "type": "string"
+                    },
+                    "modelName": {
+                      "type": "string"
+                    },
+                    "args": {
+                      "type": "object",
+                      "additionalProperties": true
+                    },
+                    "executionPolicy": {
+                      "enum": [
+                        "server",
+                        "client_auto",
+                        "client_interactive"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "type",
+                    "toolCallId",
+                    "toolName",
+                    "args",
+                    "executionPolicy"
+                  ]
+                },
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "type": {
+                      "const": "tool-result"
+                    },
+                    "toolCallId": {
+                      "type": "string"
+                    },
+                    "toolId": {
+                      "type": "string"
+                    },
+                    "toolName": {
+                      "type": "string"
+                    },
+                    "output": {},
+                    "isError": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "type",
+                    "toolCallId",
+                    "toolName",
+                    "output"
+                  ]
+                }
+              ]
+            }
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "role",
+          "content",
+          "createdAt"
+        ]
+      }
+    },
+    "clientTools": {
+      "type": "array",
+      "items": {
+        "allOf": [
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "toolId": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "modelName": {
+                "type": "string"
+              },
+              "description": {
+                "type": "string"
+              },
+              "inputSchema": {
+                "type": "object",
+                "additionalProperties": true
+              },
+              "resultSchema": {
+                "type": "object",
+                "additionalProperties": true
+              },
+              "executionPolicy": {
+                "enum": [
+                  "server",
+                  "client_auto",
+                  "client_interactive"
+                ]
+              },
+              "timeoutMs": {
+                "type": "number",
+                "minimum": 0
+              },
+              "metadata": {
+                "type": "object",
+                "additionalProperties": true
+              }
+            },
+            "required": [
+              "name",
+              "description",
+              "inputSchema",
+              "resultSchema",
+              "executionPolicy"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "executionPolicy": {
+                "enum": [
+                  "client_auto",
+                  "client_interactive"
+                ]
+              }
+            }
+          }
+        ]
+      }
+    },
+    "contextBudget": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "maxInputTokens": {
+          "type": "number",
+          "minimum": 0
+        },
+        "reserveOutputTokens": {
+          "type": "number",
+          "minimum": 0
+        },
+        "triggerRatio": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "targetRatio": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        }
+      }
+    },
+    "state": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "metadata": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "pendingToolCalls": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "runId": {
+            "type": "string"
+          },
+          "messageId": {
+            "type": "string"
+          },
+          "toolCallId": {
+            "type": "string"
+          },
+          "toolId": {
+            "type": "string"
+          },
+          "toolName": {
+            "type": "string"
+          },
+          "modelName": {
+            "type": "string"
+          },
+          "toolRuntime": {
+            "enum": [
+              "server",
+              "client"
+            ]
+          },
+          "executionPolicy": {
+            "enum": [
+              "server",
+              "client_auto",
+              "client_interactive"
+            ]
+          },
+          "timeoutMs": {
+            "type": "number",
+            "minimum": 0
+          },
+          "args": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "runId",
+          "messageId",
+          "toolCallId",
+          "toolId",
+          "toolName",
+          "modelName",
+          "toolRuntime",
+          "executionPolicy",
+          "args",
+          "createdAt"
+        ]
+      }
+    },
+    "submittedToolResults": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "runId": {
+            "type": "string"
+          },
+          "messageId": {
+            "type": "string"
+          },
+          "toolCallId": {
+            "type": "string"
+          },
+          "toolId": {
+            "type": "string"
+          },
+          "toolName": {
+            "type": "string"
+          },
+          "modelName": {
+            "type": "string"
+          },
+          "output": {},
+          "submittedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "isError": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "runId",
+          "messageId",
+          "toolCallId",
+          "toolName",
+          "output",
+          "submittedAt"
+        ]
+      }
+    },
+    "processedToolCallIds": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "updatedAt": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "runId",
+    "sequence",
+    "messages",
+    "state",
+    "pendingToolCalls",
+    "submittedToolResults",
+    "processedToolCallIds",
+    "updatedAt"
+  ]
+}

@@ -1,0 +1,61 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "runId": {
+      "type": "string"
+    },
+    "messageId": {
+      "type": "string"
+    },
+    "toolCallId": {
+      "type": "string"
+    },
+    "toolId": {
+      "type": "string"
+    },
+    "toolName": {
+      "type": "string"
+    },
+    "modelName": {
+      "type": "string"
+    },
+    "toolRuntime": {
+      "enum": [
+        "server",
+        "client"
+      ]
+    },
+    "executionPolicy": {
+      "enum": [
+        "server",
+        "client_auto",
+        "client_interactive"
+      ]
+    },
+    "timeoutMs": {
+      "type": "number",
+      "minimum": 0
+    },
+    "args": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "createdAt": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "runId",
+    "messageId",
+    "toolCallId",
+    "toolId",
+    "toolName",
+    "modelName",
+    "toolRuntime",
+    "executionPolicy",
+    "args",
+    "createdAt"
+  ]
+}

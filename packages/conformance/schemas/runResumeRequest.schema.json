@@ -1,0 +1,57 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "runId": {
+      "type": "string"
+    },
+    "toolResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "runId": {
+          "type": "string"
+        },
+        "messageId": {
+          "type": "string"
+        },
+        "toolCallId": {
+          "type": "string"
+        },
+        "toolId": {
+          "type": "string"
+        },
+        "toolName": {
+          "type": "string"
+        },
+        "modelName": {
+          "type": "string"
+        },
+        "output": {},
+        "submittedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "isError": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "runId",
+        "messageId",
+        "toolCallId",
+        "toolName",
+        "output",
+        "submittedAt"
+      ]
+    },
+    "stateDelta": {
+      "type": "object",
+      "additionalProperties": true
+    }
+  },
+  "required": [
+    "runId",
+    "toolResult"
+  ]
+}

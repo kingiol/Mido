@@ -1,0 +1,48 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "toolId": {
+      "type": "string"
+    },
+    "name": {
+      "type": "string"
+    },
+    "modelName": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "inputSchema": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "resultSchema": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "executionPolicy": {
+      "enum": [
+        "server",
+        "client_auto",
+        "client_interactive"
+      ]
+    },
+    "timeoutMs": {
+      "type": "number",
+      "minimum": 0
+    },
+    "metadata": {
+      "type": "object",
+      "additionalProperties": true
+    }
+  },
+  "required": [
+    "name",
+    "description",
+    "inputSchema",
+    "resultSchema",
+    "executionPolicy"
+  ]
+}
