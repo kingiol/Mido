@@ -23,6 +23,7 @@ flowchart LR
   A --> C["@mido/server-sdk"]
   A --> D["@mido/client-core"]
   A --> E["@mido/client-web"]
+  A --> G["MidoClient (Swift Package)"]
   A --> F["@mido/conformance"]
   B --> F
   D --> E
@@ -68,6 +69,14 @@ flowchart LR
 - Implements `SSE down + POST up`.
 - Exposes `useAgentRun`, `useToolCalls`, and `usePendingInteractiveTools`.
 - Provides a minimal reference panel for demo and integration debugging.
+
+### `MidoClient` Swift Package
+
+- Provides Swift 6 Codable protocol models for iOS clients.
+- Implements the native client runtime as an `AgentClient` actor.
+- Executes registered `client_auto` tools locally and resumes the server run.
+- Surfaces `client_interactive` tool calls as pending snapshot state for app UI approval.
+- Implements `URLSessionSSETransport` for the same `SSE down + POST up` HTTP contract as the web client.
 
 ### `@mido/conformance`
 
@@ -195,7 +204,8 @@ Managed MCP connections live in `@mido/mcp-core`. They track connection state, e
 
 Native clients should reuse the same protocol shape, not the web implementation details.
 
-- Read JSON Schemas from `packages/conformance/schemas`.
+- Use `packages/client-ios` when building an iOS app with Swift Package Manager.
+- Read JSON Schemas from `packages/conformance/schemas` when implementing another native SDK.
 - Follow `packages/conformance/docs/native-client-contract.md`.
 - Keep local transport, tool bridge, and UI platform-specific.
 - Keep run state, event ordering, and tool IDs protocol-compatible.

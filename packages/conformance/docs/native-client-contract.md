@@ -28,6 +28,25 @@ This package defines the v1 contract for non-TypeScript clients.
 - Tool registry: keep the same `name/inputSchema/resultSchema/executionPolicy` contract as the server
 - Client-side MCP: register MCP tools as `client_auto`, advertise their definitions in `clientTools`, and execute `callTool` locally when the server streams the tool call.
 
+## iOS Swift Package
+
+The first-party iOS SDK is `packages/client-ios`, a Swift Package named `MidoClient`.
+
+```swift
+dependencies: [
+  .package(url: "https://github.com/kingiol/Mido.git", branch: "main")
+]
+```
+
+Add the `MidoClient` product to the app target. The package uses Swift 6 and declares iOS support through Swift Package Manager. It provides:
+
+- Codable protocol models for `RunStartRequest`, `RunResumeRequest`, `CoreEvent`, messages, tools, and JSON values.
+- An `AgentClient` actor that tracks snapshots, transcript state, local tool calls, pending interactive tools, and resume flow.
+- A `URLSessionSSETransport` for `POST /run`, `POST /resume`, and optional `POST /cancel`.
+- Lightweight outgoing tool result validation for common JSON Schema keywords.
+
+The package does not run the agent loop on iOS and does not include SwiftUI UI components or Swift MCP bindings in this first pass.
+
 ## Native Skill Manager
 
 Native clients can manage user skills locally, but skill loading and script execution remain server-owned.

@@ -27,6 +27,8 @@ Use Mido when your app needs the model to reason on the server while the client 
   Transport-agnostic client runtime with local tool registry, pending interactive tool state, and automatic resume for `client_auto` tools.
 - `@mido/client-web`
   Browser transport, React hooks, and a minimal reference panel.
+- `MidoClient`
+  iOS Swift 6 client SDK packaged with Swift Package Manager under `packages/client-ios`.
 - `@mido/toolkit-core`
   Optional agent tools for workspace access, web search/fetch, document retrieval, browser automation adapters, and scoped memory.
 - `@mido/conformance`
@@ -41,6 +43,7 @@ Use Mido when your app needs the model to reason on the server while the client 
 │   └── data-flow.md
 ├── packages/
 │   ├── client-core/
+│   ├── client-ios/
 │   ├── client-web/
 │   ├── conformance/
 │   ├── mcp-core/
@@ -166,6 +169,23 @@ await client.sendMessage('Please triage this ticket.', {
 ```
 
 Native clients can keep local skill state with `createAgentSkillManager({ store })` and pass it to `createAgentClient({ skillManager })`. The client will include enabled skill refs in `metadata.skills.enabled` for each run.
+
+## iOS Swift Package
+
+The iOS client SDK lives in `packages/client-ios` and is distributed as a Swift Package named `MidoClient`.
+
+```swift
+// Package.swift
+.package(url: "https://github.com/kingiol/Mido.git", branch: "main")
+```
+
+Then add the `MidoClient` product to your app target. The first iOS SDK pass includes Swift 6 Codable protocol models, an `AgentClient` actor, local `client_auto` and `client_interactive` tool handling, and a `URLSessionSSETransport` for the same `SSE down + POST up` contract used by the web client. The agent loop still runs on the server.
+
+Verify the Swift package with:
+
+```bash
+swift test --package-path packages/client-ios
+```
 
 To enable `scripts/`, configure `scriptSandbox` and register `createAgentSkillScriptTool(skillRegistry)`. See [Agent Skills](./docs/agent-skills.md) for the sandbox contract and safety controls.
 
