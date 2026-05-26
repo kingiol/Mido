@@ -5,6 +5,7 @@ export type {
   ModelAdapter,
   ModelAdapterEvent,
   ModelAdapterRunInput,
+  RunExecutionContext,
   ServerToolRuntimeDefinition,
   ToolExecutionContext
 } from './runner.js';
@@ -71,6 +72,7 @@ export type {
   FileSystemStoreOptions,
   SessionStore,
   SessionStoreOptions,
+  StorageScope,
   StoredThread,
   ThreadContextState,
   ThreadLifecycle,
@@ -79,7 +81,18 @@ export type {
   ThreadUserState,
   ThreadStore
 } from './store.js';
-export { FileSystemEventStore, FileSystemThreadStore, InMemoryEventStore, InMemorySessionStore, InMemoryThreadStore, RedisSessionStore } from './store.js';
+export {
+  DEFAULT_STORAGE_SCOPE,
+  FileSystemEventStore,
+  FileSystemThreadStore,
+  InMemoryEventStore,
+  InMemorySessionStore,
+  InMemoryThreadStore,
+  RedisSessionStore,
+  getStorageScopeHash,
+  getStorageScopeId,
+  normalizeStorageScope
+} from './store.js';
 export { ToolRegistry } from './tool-registry.js';
 export type { VercelAiAdapterOptions, VercelAiStreamResult } from './adapters/vercel-ai.js';
 export { createVercelAiModelAdapter, normalizeVercelAiStream } from './adapters/vercel-ai.js';

@@ -2,8 +2,9 @@ import { mkdtemp, readFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 
-import { buildRunTrace, type AgentMessage, type JsonObject, type RunResumeRequest, type RunStartRequest } from '@mido/protocol-core';
+import { buildRunTrace, type AgentMessage, type CoreEvent, type JsonObject, type RunResumeRequest, type RunStartRequest } from '@mido/protocol-core';
 import {
+  DEFAULT_STORAGE_SCOPE,
   FileSystemEventStore,
   FileSystemThreadStore,
   InMemorySessionStore,
@@ -12,11 +13,13 @@ import {
   createAgentRunner,
   createDefaultToolPolicy,
   refreshMcpServerTools,
+  getStorageScopeId,
   type McpToolClient,
   type ModelAdapter,
   type ModelAdapterCapabilities,
   type ModelAdapterEvent,
   type ModelAdapterRunInput,
+  type StorageScope,
   type ThreadMessageIndexEntry
 } from '@mido/server-sdk';
 
@@ -503,6 +506,8 @@ describe('server-sdk', () => {
 
   it('persists threads and event traces through filesystem stores', async () => {
     const rootDir = await mkdtemp(path.join(tmpdir(), 'mido-store-'));
+    const defaultScopeId = getStorageScopeId(DEFAULT_STORAGE_SCOPE);
+    const defaultScopeRoot = path.join(rootDir, 'scopes', defaultScopeId);
     const threadStore = new FileSystemThreadStore({ rootDir });
     const eventStore = new FileSystemEventStore({ rootDir });
     const adapter = new ScriptedModelAdapter([
@@ -545,12 +550,21 @@ describe('server-sdk', () => {
     const storedEvents = await eventStore.loadEvents({ runId: 'run-persist-1' });
     const storedThread = await threadStore.loadThread('thread-persist-1');
     const reloadedEvents = await new FileSystemEventStore({ rootDir }).loadEvents({ runId: 'run-persist-1' });
-    const snapshotFile = await readFile(path.join(rootDir, 'threads', 'thread-persist-1', 'snapshot.json'), 'utf8');
+    const snapshotFile = await readFile(path.join(defaultScopeRoot, 'threads', 'thread-persist-1', 'snapshot.json'), 'utf8');
     const snapshot = JSON.parse(snapshotFile) as { messageIndex: Record<string, ThreadMessageIndexEntry> };
     const eventsFile = await readFile(
-      path.join(rootDir, 'threads', 'thread-persist-1', 'runs', 'run-persist-1', 'events.jsonl'),
+      path.join(defaultScopeRoot, 'threads', 'thread-persist-1', 'runs', 'run-persist-1', 'events.jsonl'),
       'utf8'
     );
+    const runIndexFile = JSON.parse(await readFile(path.join(defaultScopeRoot, 'run-index', 'run-persist-1.json'), 'utf8')) as {
+      runId: string;
+      threadId: string;
+    };
+    const scopeFile = JSON.parse(await readFile(path.join(defaultScopeRoot, 'scope.json'), 'utf8')) as {
+      scopeId: string;
+      scopeHash: string;
+      segments?: string[];
+    };
     const trace = buildRunTrace(storedEvents);
     const toolResult = storedEvents.find(event => event.type === 'TOOL_RESULT');
 
@@ -562,6 +576,15 @@ describe('server-sdk', () => {
     expect(snapshot.messageIndex['user-1']).toEqual({
       triggeredRunId: 'run-persist-1'
     });
+    expect(runIndexFile).toMatchObject({
+      runId: 'run-persist-1',
+      threadId: 'thread-persist-1'
+    });
+    expect(scopeFile).toMatchObject({
+      scopeId: defaultScopeId,
+      scopeHash: defaultScopeId.replace(/^scp_/, '')
+    });
+    expect(scopeFile.segments).toBeUndefined();
     expect(eventsFile.trim().split('\n')).toHaveLength(events.length);
     expect(storedEvents[0]).toMatchObject({
       type: 'RUN_STARTED',
@@ -634,6 +657,40 @@ describe('server-sdk', () => {
     expect(secondRunEvents.at(-1)).toMatchObject({
       type: 'RUN_FINISHED',
       runId: 'run-persist-2'
+    });
+  });
+
+  it('isolates filesystem threads and events by storage scope', async () => {
+    const rootDir = await mkdtemp(path.join(tmpdir(), 'mido-store-'));
+    const threadStore = new FileSystemThreadStore({ rootDir });
+    const eventStore = new FileSystemEventStore({ rootDir });
+    const scopeA: StorageScope = { segments: ['tenant', 'alpha'] };
+    const scopeB: StorageScope = { segments: ['tenant', 'beta'] };
+
+    await threadStore.saveThread(scopeA, {
+      threadId: 'thread-shared',
+      messages: [createUserMessage('Alpha', 'user-alpha')],
+      state: { tenant: 'alpha' },
+      updatedAt: new Date().toISOString()
+    });
+    await threadStore.saveThread(scopeB, {
+      threadId: 'thread-shared',
+      messages: [createUserMessage('Beta', 'user-beta')],
+      state: { tenant: 'beta' },
+      updatedAt: new Date().toISOString()
+    });
+    await eventStore.appendEvent(scopeA, createRunStartedEvent('run-shared', 'thread-alpha'));
+    await eventStore.appendEvent(scopeB, createRunStartedEvent('run-shared', 'thread-beta'));
+
+    expect((await threadStore.loadThread(scopeA, 'thread-shared'))?.state).toEqual({ tenant: 'alpha' });
+    expect((await threadStore.loadThread(scopeB, 'thread-shared'))?.state).toEqual({ tenant: 'beta' });
+    expect((await eventStore.loadEvents(scopeA, { runId: 'run-shared' }))[0]).toMatchObject({
+      type: 'RUN_STARTED',
+      threadId: 'thread-alpha'
+    });
+    expect((await eventStore.loadEvents(scopeB, { runId: 'run-shared' }))[0]).toMatchObject({
+      type: 'RUN_STARTED',
+      threadId: 'thread-beta'
     });
   });
 
@@ -735,6 +792,87 @@ describe('server-sdk', () => {
       type: 'RUN_FINISHED',
       finishReason: 'awaiting_client_tool',
       pendingToolCallIds: ['client-lookup-1']
+    });
+  });
+
+  it('isolates checkpoint resume by runner storage scope', async () => {
+    const adapter = new ScriptedModelAdapter([
+      [
+        { type: 'tool-call', toolCallId: 'confirm-1', toolName: 'confirm', args: { approved: false } },
+        { type: 'done' }
+      ],
+      [
+        { type: 'tool-call', toolCallId: 'confirm-1', toolName: 'confirm', args: { approved: false } },
+        { type: 'done' }
+      ],
+      [
+        { type: 'text-delta', delta: 'Alpha confirmed' },
+        { type: 'text-end', text: 'Alpha confirmed' },
+        { type: 'done' }
+      ],
+      [
+        { type: 'text-delta', delta: 'Beta confirmed' },
+        { type: 'text-end', text: 'Beta confirmed' },
+        { type: 'done' }
+      ]
+    ]);
+    const runner = createAgentRunner({
+      modelAdapter: adapter,
+      sessionStore: new InMemorySessionStore()
+    });
+    const scopeA: StorageScope = { segments: ['tenant', 'alpha'] };
+    const scopeB: StorageScope = { segments: ['tenant', 'beta'] };
+
+    runner.registerTool({
+      name: 'confirm',
+      description: 'Confirm something',
+      executionPolicy: 'client_interactive',
+      inputSchema: approvalSchema,
+      resultSchema: approvalSchema
+    });
+
+    const firstScopeEvents = await collect(runner.run({
+      ...createRunRequest('Confirm alpha'),
+      runId: 'run-shared-scope',
+      threadId: 'thread-alpha'
+    }, { storageScope: scopeA }));
+    const missingEvents = await collect(
+      runner.resume(
+        createResumeRequest('run-shared-scope', 'confirm-1', 'confirm', { approved: true }, firstScopeEvents[0]?.messageId ?? 'msg'),
+        { storageScope: scopeB }
+      )
+    );
+    const secondScopeEvents = await collect(runner.run({
+      ...createRunRequest('Confirm beta'),
+      runId: 'run-shared-scope',
+      threadId: 'thread-beta'
+    }, { storageScope: scopeB }));
+    const firstResumeEvents = await collect(
+      runner.resume(
+        createResumeRequest('run-shared-scope', 'confirm-1', 'confirm', { approved: true }, firstScopeEvents[0]?.messageId ?? 'msg'),
+        { storageScope: scopeA }
+      )
+    );
+    const secondResumeEvents = await collect(
+      runner.resume(
+        createResumeRequest('run-shared-scope', 'confirm-1', 'confirm', { approved: true }, secondScopeEvents[0]?.messageId ?? 'msg'),
+        { storageScope: scopeB }
+      )
+    );
+
+    expect(missingEvents.at(-1)).toMatchObject({
+      type: 'RUN_ERROR',
+      error: {
+        code: 'checkpoint_not_found'
+      }
+    });
+    expect(firstResumeEvents.find(event => event.type === 'TEXT_END')).toMatchObject({
+      type: 'TEXT_END',
+      text: 'Alpha confirmed'
+    });
+    expect(secondResumeEvents.find(event => event.type === 'TEXT_END')).toMatchObject({
+      type: 'TEXT_END',
+      text: 'Beta confirmed'
     });
   });
 
@@ -1482,6 +1620,18 @@ function createResumeRequest(
       output,
       submittedAt: new Date().toISOString()
     }
+  };
+}
+
+function createRunStartedEvent(runId: string, threadId: string): CoreEvent {
+  return {
+    type: 'RUN_STARTED',
+    eventId: `evt-${runId}-${threadId}`,
+    runId,
+    threadId,
+    messageId: `msg-${runId}-${threadId}`,
+    sequence: 1,
+    timestamp: new Date().toISOString()
   };
 }
 

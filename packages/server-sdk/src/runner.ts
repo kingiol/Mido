@@ -38,7 +38,17 @@ import {
   validateSchema
 } from '@mido/protocol-core';
 
-import { type EventStore, type SessionStore, type StoredThread, type ThreadLifecycle, type ThreadMessageIndexEntry, type ThreadStore } from './store.js';
+import {
+  getStorageScopeId,
+  normalizeStorageScope,
+  type EventStore,
+  type SessionStore,
+  type StorageScope,
+  type StoredThread,
+  type ThreadLifecycle,
+  type ThreadMessageIndexEntry,
+  type ThreadStore
+} from './store.js';
 import { applySystemPromptPolicy, type SystemPromptContext, type SystemPromptProvider } from './system-prompt.js';
 import { ToolRegistry, type RegisteredToolDefinition } from './tool-registry.js';
 import { checkModelAdapterCapabilities, type ModelAdapterCapabilities } from './capabilities.js';
@@ -119,12 +129,16 @@ export interface CreateAgentRunnerOptions {
   skillRegistry?: AgentSkillRegistry;
 }
 
+export interface RunExecutionContext {
+  storageScope?: StorageScope;
+}
+
 export interface AgentRunner {
   registerTool(definition: ServerToolRuntimeDefinition): RegisteredServerToolRuntimeDefinition;
   setSystemPrompt(provider?: SystemPromptProvider): void;
-  run(request: RunStartRequest): AsyncIterable<CoreEvent>;
-  resume(request: RunResumeRequest): AsyncIterable<CoreEvent>;
-  cancelRun(request: RunCancelRequest): Promise<CoreEvent | undefined>;
+  run(request: RunStartRequest, context?: RunExecutionContext): AsyncIterable<CoreEvent>;
+  resume(request: RunResumeRequest, context?: RunExecutionContext): AsyncIterable<CoreEvent>;
+  cancelRun(request: RunCancelRequest, context?: RunExecutionContext): Promise<CoreEvent | undefined>;
   listTools(): ToolDefinition[];
 }
 
@@ -139,6 +153,7 @@ interface RunContext {
   isResume?: boolean;
   sequence: number;
   traceId: string;
+  storageScope: StorageScope;
   inputMessageIds: ReadonlySet<string>;
   triggerMessageId?: string;
 }
@@ -185,12 +200,13 @@ export function createAgentRunner(options: CreateAgentRunnerOptions): AgentRunne
       systemPrompt = provider;
     },
 
-    async *run(request: RunStartRequest): AsyncIterable<CoreEvent> {
+    async *run(request: RunStartRequest, executionContext?: RunExecutionContext): AsyncIterable<CoreEvent> {
       const runId = request.runId ?? createId('run');
       const threadId = request.threadId ?? createId('thread');
       const messageId = createId('msg');
-      const eventSink = createPersistentEventSink(options.eventSink, options.eventStore);
-      const storedThread = await loadThreadSnapshot(threadId, options.threadStore);
+      const storageScope = normalizeStorageScope(executionContext?.storageScope);
+      const eventSink = createPersistentEventSink(storageScope, options.eventSink, options.eventStore);
+      const storedThread = await loadThreadSnapshot(storageScope, threadId, options.threadStore);
       const storedLifecycle = normalizeThreadLifecycle(storedThread?.lifecycle);
 
       if (isArchivedLifecycle(storedLifecycle)) {
@@ -228,7 +244,7 @@ export function createAgentRunner(options: CreateAgentRunnerOptions): AgentRunne
         state,
         metadata: request.metadata
       });
-      const requestMessages = await resolveRunMessagesFromThreadSnapshot(request, options.threadStore);
+      const requestMessages = await resolveRunMessagesFromThreadSnapshot(storageScope, request, options.threadStore);
       const messages = await applySystemPromptPolicy(
         requestMessages,
         {
@@ -250,6 +266,7 @@ export function createAgentRunner(options: CreateAgentRunnerOptions): AgentRunne
         state,
         sequence: 0,
         traceId: getTraceId(runId, request.metadata),
+        storageScope,
         inputMessageIds: new Set(request.messages.filter(message => message.role !== 'system').map(message => message.id)),
         triggerMessageId: getTriggerMessageId(request.messages)
       };
@@ -262,7 +279,8 @@ export function createAgentRunner(options: CreateAgentRunnerOptions): AgentRunne
       yield* emitOne(started, eventSink);
       context.sequence = started.sequence;
 
-      const activeRun = beginActiveRun(activeRuns, runId);
+      const activeRunKey = getActiveRunKey(storageScope, runId);
+      const activeRun = beginActiveRun(activeRuns, activeRunKey, runId);
       try {
         yield* executeRunLoop(context, {
           registry,
@@ -277,17 +295,19 @@ export function createAgentRunner(options: CreateAgentRunnerOptions): AgentRunne
           signal: activeRun.controller.signal
         });
       } finally {
-        endActiveRun(activeRuns, runId, activeRun.controller);
+        endActiveRun(activeRuns, activeRunKey, activeRun.controller);
       }
     },
 
-    async *resume(request: RunResumeRequest): AsyncIterable<CoreEvent> {
-      const activeRun = beginActiveRun(activeRuns, request.runId);
+    async *resume(request: RunResumeRequest, executionContext?: RunExecutionContext): AsyncIterable<CoreEvent> {
+      const storageScope = normalizeStorageScope(executionContext?.storageScope);
+      const activeRunKey = getActiveRunKey(storageScope, request.runId);
+      const activeRun = beginActiveRun(activeRuns, activeRunKey, request.runId);
       const resumeMessageId = createId('msg');
-      const eventSink = createPersistentEventSink(options.eventSink, options.eventStore);
+      const eventSink = createPersistentEventSink(storageScope, options.eventSink, options.eventStore);
 
       try {
-        const checkpoint = await options.sessionStore.loadCheckpoint(request.runId);
+        const checkpoint = await options.sessionStore.loadCheckpoint(storageScope, request.runId);
         if (!checkpoint) {
           yield* emitOne(
             createErrorEvent(request.runId, resumeMessageId, 0, {
@@ -432,6 +452,7 @@ export function createAgentRunner(options: CreateAgentRunnerOptions): AgentRunne
         messages: checkpoint.messages,
         metadata: checkpoint.metadata,
         state: checkpoint.state,
+        storageScope,
         inputMessageIds
       }, options.threadStore);
 
@@ -462,7 +483,7 @@ export function createAgentRunner(options: CreateAgentRunnerOptions): AgentRunne
 
       if (checkpoint.pendingToolCalls.length > 0) {
         checkpoint.updatedAt = nowIso();
-        await options.sessionStore.saveCheckpoint(checkpoint);
+        await options.sessionStore.saveCheckpoint(storageScope, checkpoint);
         checkpoint.sequence += 1;
         const waitingEvent = createEvent(
           { runId: checkpoint.runId, sequence: checkpoint.sequence, traceId: getTraceId(checkpoint.runId, checkpoint.metadata) },
@@ -478,7 +499,7 @@ export function createAgentRunner(options: CreateAgentRunnerOptions): AgentRunne
         return;
       }
 
-      await options.sessionStore.deleteCheckpoint(checkpoint.runId);
+      await options.sessionStore.deleteCheckpoint(storageScope, checkpoint.runId);
 
       yield* executeRunLoop(
         {
@@ -492,6 +513,7 @@ export function createAgentRunner(options: CreateAgentRunnerOptions): AgentRunne
           state: checkpoint.state,
           sequence: checkpoint.sequence,
           traceId: getTraceId(checkpoint.runId, checkpoint.metadata),
+          storageScope,
           inputMessageIds: new Set(checkpoint.messages.map(message => message.id))
         },
         {
@@ -508,25 +530,27 @@ export function createAgentRunner(options: CreateAgentRunnerOptions): AgentRunne
         }
       );
       } finally {
-        endActiveRun(activeRuns, request.runId, activeRun.controller);
+        endActiveRun(activeRuns, activeRunKey, activeRun.controller);
       }
     },
 
-    async cancelRun(request: RunCancelRequest): Promise<CoreEvent | undefined> {
-      const activeRun = activeRuns.get(request.runId);
+    async cancelRun(request: RunCancelRequest, executionContext?: RunExecutionContext): Promise<CoreEvent | undefined> {
+      const storageScope = normalizeStorageScope(executionContext?.storageScope);
+      const activeRunKey = getActiveRunKey(storageScope, request.runId);
+      const activeRun = activeRuns.get(activeRunKey);
       if (activeRun) {
         activeRun.reason = request.reason;
         activeRun.controller.abort(createAbortError(request.reason ?? `Run "${request.runId}" was cancelled`));
         return undefined;
       }
 
-      const checkpoint = await options.sessionStore.loadCheckpoint(request.runId);
+      const checkpoint = await options.sessionStore.loadCheckpoint(storageScope, request.runId);
       if (!checkpoint) {
         return undefined;
       }
 
-      await options.sessionStore.deleteCheckpoint(request.runId);
-      const eventSink = createPersistentEventSink(options.eventSink, options.eventStore);
+      await options.sessionStore.deleteCheckpoint(storageScope, request.runId);
+      const eventSink = createPersistentEventSink(storageScope, options.eventSink, options.eventStore);
       const cancelledEvent = createEvent(
         { runId: checkpoint.runId, sequence: checkpoint.sequence, traceId: getTraceId(checkpoint.runId, checkpoint.metadata) },
         createId('msg'),
@@ -1167,7 +1191,7 @@ async function* executeRunLoop(
         submittedToolResults: [],
         updatedAt: nowIso()
       };
-      await dependencies.sessionStore.saveCheckpoint(checkpoint);
+      await dependencies.sessionStore.saveCheckpoint(context.storageScope, checkpoint);
 
       const waitingEvent = createEvent(context, assistantMessageId, {
         type: 'RUN_FINISHED',
@@ -1182,6 +1206,7 @@ async function* executeRunLoop(
 }
 
 async function resolveRunMessagesFromThreadSnapshot(
+  storageScope: StorageScope,
   request: RunStartRequest,
   threadStore?: ThreadStore
 ): Promise<AgentMessage[]> {
@@ -1189,7 +1214,7 @@ async function resolveRunMessagesFromThreadSnapshot(
     return request.messages;
   }
 
-  const stored = await threadStore.loadThread(request.threadId);
+  const stored = await threadStore.loadThread(storageScope, request.threadId);
   if (!stored) {
     return request.messages;
   }
@@ -1217,12 +1242,12 @@ function mergeStoredThreadMessages(storedMessages: AgentMessage[], requestMessag
   ];
 }
 
-async function loadThreadSnapshot(threadId: string | undefined, threadStore?: ThreadStore): Promise<StoredThread | null> {
+async function loadThreadSnapshot(storageScope: StorageScope, threadId: string | undefined, threadStore?: ThreadStore): Promise<StoredThread | null> {
   if (!threadStore || !threadId) {
     return null;
   }
 
-  return threadStore.loadThread(threadId);
+  return threadStore.loadThread(storageScope, threadId);
 }
 
 type ArchivedThreadLifecycle = ThreadLifecycle & {
@@ -1655,7 +1680,7 @@ async function* emitPolicyBlockedToolResult(
   context.sequence = resultEvent.sequence;
 }
 
-function createPersistentEventSink(eventSink?: EventSink, eventStore?: EventStore): EventSink | undefined {
+function createPersistentEventSink(storageScope: StorageScope, eventSink?: EventSink, eventStore?: EventStore): EventSink | undefined {
   if (!eventSink && !eventStore) {
     return undefined;
   }
@@ -1663,7 +1688,7 @@ function createPersistentEventSink(eventSink?: EventSink, eventStore?: EventStor
   return {
     async onEvent(event) {
       if (eventStore) {
-        await eventStore.appendEvent(event);
+        await eventStore.appendEvent(storageScope, event);
       }
 
       if (eventSink) {
@@ -1675,9 +1700,10 @@ function createPersistentEventSink(eventSink?: EventSink, eventStore?: EventStor
 
 function beginActiveRun(
   activeRuns: Map<string, { controller: AbortController; reason?: string }>,
+  activeRunKey: string,
   runId: string
 ): { controller: AbortController; reason?: string } {
-  const existing = activeRuns.get(runId);
+  const existing = activeRuns.get(activeRunKey);
   if (existing && !existing.controller.signal.aborted) {
     throw new Error(`Run "${runId}" is already active`);
   }
@@ -1685,18 +1711,22 @@ function beginActiveRun(
   const activeRun = {
     controller: new AbortController()
   };
-  activeRuns.set(runId, activeRun);
+  activeRuns.set(activeRunKey, activeRun);
   return activeRun;
 }
 
 function endActiveRun(
   activeRuns: Map<string, { controller: AbortController; reason?: string }>,
-  runId: string,
+  activeRunKey: string,
   controller: AbortController
 ): void {
-  if (activeRuns.get(runId)?.controller === controller) {
-    activeRuns.delete(runId);
+  if (activeRuns.get(activeRunKey)?.controller === controller) {
+    activeRuns.delete(activeRunKey);
   }
+}
+
+function getActiveRunKey(storageScope: StorageScope, runId: string): string {
+  return `${getStorageScopeId(storageScope)}:${runId}`;
 }
 
 async function* emitCancelledRun(
@@ -1747,7 +1777,7 @@ async function* emitCancelledRun(
 }
 
 async function saveThreadSnapshot(
-  context: Pick<RunContext, 'runId' | 'threadId' | 'messages' | 'state' | 'metadata' | 'inputMessageIds' | 'triggerMessageId'> & {
+  context: Pick<RunContext, 'runId' | 'threadId' | 'messages' | 'state' | 'metadata' | 'storageScope' | 'inputMessageIds' | 'triggerMessageId'> & {
     lifecycle?: ThreadLifecycle;
   },
   threadStore?: ThreadStore
@@ -1756,7 +1786,7 @@ async function saveThreadSnapshot(
     return;
   }
 
-  const existing = await threadStore.loadThread(context.threadId);
+  const existing = await threadStore.loadThread(context.storageScope, context.threadId);
   const messageIndex: Record<string, ThreadMessageIndexEntry> = {};
 
   for (const message of context.messages) {
@@ -1779,7 +1809,7 @@ async function saveThreadSnapshot(
     }
   }
 
-  await threadStore.saveThread({
+  await threadStore.saveThread(context.storageScope, {
     threadId: context.threadId,
     messages: context.messages,
     messageIndex,

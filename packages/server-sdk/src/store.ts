@@ -1,4 +1,5 @@
-import { appendFile, mkdir, readFile, readdir, rename, writeFile } from 'node:fs/promises';
+import { createHash } from 'node:crypto';
+import { appendFile, mkdir, readFile, rename, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 
 import type { RedisClientType } from 'redis';
@@ -13,11 +14,46 @@ import {
   type ToolResultEnvelope
 } from '@mido/protocol-core';
 
+export interface StorageScope {
+  segments: string[];
+}
+
+export const DEFAULT_STORAGE_SCOPE: StorageScope = { segments: ['default'] };
+
+export function normalizeStorageScope(scope?: StorageScope): StorageScope {
+  if (!scope) {
+    return { segments: [...DEFAULT_STORAGE_SCOPE.segments] };
+  }
+
+  if (!Array.isArray(scope.segments) || scope.segments.length === 0) {
+    throw new Error('Storage scope must include at least one segment');
+  }
+
+  const segments = scope.segments.map((segment, index) => {
+    if (typeof segment !== 'string' || segment.length === 0) {
+      throw new Error(`Storage scope segment at index ${index} must be a non-empty string`);
+    }
+
+    return segment;
+  });
+
+  return { segments };
+}
+
+export function getStorageScopeHash(scope?: StorageScope): string {
+  const normalized = normalizeStorageScope(scope);
+  return createHash('sha256').update(JSON.stringify(normalized.segments)).digest('hex').slice(0, 32);
+}
+
+export function getStorageScopeId(scope?: StorageScope): string {
+  return `scp_${getStorageScopeHash(scope)}`;
+}
+
 export interface SessionStore {
-  saveCheckpoint(checkpoint: RunCheckpoint): Promise<void>;
-  loadCheckpoint(runId: string): Promise<RunCheckpoint | null>;
-  deleteCheckpoint(runId: string): Promise<void>;
-  heartbeat(runId: string): Promise<void>;
+  saveCheckpoint(scope: StorageScope, checkpoint: RunCheckpoint): Promise<void>;
+  loadCheckpoint(scope: StorageScope, runId: string): Promise<RunCheckpoint | null>;
+  deleteCheckpoint(scope: StorageScope, runId: string): Promise<void>;
+  heartbeat(scope: StorageScope, runId: string): Promise<void>;
 }
 
 export interface ThreadSnapshot {
@@ -65,8 +101,8 @@ export interface StoredThread extends ThreadSnapshot {
 }
 
 export interface ThreadStore {
-  saveThread(thread: ThreadSnapshot): Promise<void>;
-  loadThread(threadId: string): Promise<StoredThread | null>;
+  saveThread(scope: StorageScope, thread: ThreadSnapshot): Promise<void>;
+  loadThread(scope: StorageScope, threadId: string): Promise<StoredThread | null>;
 }
 
 export interface EventStoreQuery {
@@ -76,8 +112,8 @@ export interface EventStoreQuery {
 }
 
 export interface EventStore {
-  appendEvent(event: CoreEvent): Promise<void>;
-  loadEvents(query: EventStoreQuery): Promise<CoreEvent[]>;
+  appendEvent(scope: StorageScope, event: CoreEvent): Promise<void>;
+  loadEvents(scope: StorageScope, query: EventStoreQuery): Promise<CoreEvent[]>;
 }
 
 export interface SessionStoreOptions {
@@ -93,47 +129,84 @@ interface StoredCheckpoint {
   expiresAt: number;
 }
 
+interface RunIndexEntry {
+  runId: string;
+  threadId: string;
+  createdAt: string;
+}
+
+interface ScopeMetadata {
+  scopeId: string;
+  scopeHash: string;
+  createdAt: string;
+}
+
 export class InMemorySessionStore implements SessionStore {
-  private readonly entries = new Map<string, StoredCheckpoint>();
+  private readonly entriesByScope = new Map<string, Map<string, StoredCheckpoint>>();
   private readonly ttlMs: number;
 
   constructor(options: SessionStoreOptions = {}) {
     this.ttlMs = options.ttlMs ?? 5 * 60 * 1000;
   }
 
-  async saveCheckpoint(checkpoint: RunCheckpoint): Promise<void> {
-    this.entries.set(checkpoint.runId, {
+  async saveCheckpoint(scope: StorageScope, checkpoint: RunCheckpoint): Promise<void>;
+  async saveCheckpoint(checkpoint: RunCheckpoint): Promise<void>;
+  async saveCheckpoint(scopeOrCheckpoint: StorageScope | RunCheckpoint, maybeCheckpoint?: RunCheckpoint): Promise<void> {
+    const { scope, checkpoint } = resolveScopeAndValue(scopeOrCheckpoint, maybeCheckpoint);
+    this.getEntries(scope).set(checkpoint.runId, {
       checkpoint: structuredClone(checkpoint),
       expiresAt: Date.now() + this.ttlMs
     });
   }
 
-  async loadCheckpoint(runId: string): Promise<RunCheckpoint | null> {
-    const entry = this.entries.get(runId);
+  async loadCheckpoint(scope: StorageScope, runId: string): Promise<RunCheckpoint | null>;
+  async loadCheckpoint(runId: string): Promise<RunCheckpoint | null>;
+  async loadCheckpoint(scopeOrRunId: StorageScope | string, maybeRunId?: string): Promise<RunCheckpoint | null> {
+    const { scope, runId } = resolveScopeAndRunId(scopeOrRunId, maybeRunId);
+    const entries = this.getEntries(scope);
+    const entry = entries.get(runId);
     if (!entry) {
       return null;
     }
 
     if (entry.expiresAt <= Date.now()) {
-      this.entries.delete(runId);
+      entries.delete(runId);
       return null;
     }
 
     return structuredClone(entry.checkpoint);
   }
 
-  async deleteCheckpoint(runId: string): Promise<void> {
-    this.entries.delete(runId);
+  async deleteCheckpoint(scope: StorageScope, runId: string): Promise<void>;
+  async deleteCheckpoint(runId: string): Promise<void>;
+  async deleteCheckpoint(scopeOrRunId: StorageScope | string, maybeRunId?: string): Promise<void> {
+    const { scope, runId } = resolveScopeAndRunId(scopeOrRunId, maybeRunId);
+    this.getEntries(scope).delete(runId);
   }
 
-  async heartbeat(runId: string): Promise<void> {
-    const entry = this.entries.get(runId);
+  async heartbeat(scope: StorageScope, runId: string): Promise<void>;
+  async heartbeat(runId: string): Promise<void>;
+  async heartbeat(scopeOrRunId: StorageScope | string, maybeRunId?: string): Promise<void> {
+    const { scope, runId } = resolveScopeAndRunId(scopeOrRunId, maybeRunId);
+    const entry = this.getEntries(scope).get(runId);
     if (!entry) {
       return;
     }
 
     entry.expiresAt = Date.now() + this.ttlMs;
     entry.checkpoint.updatedAt = nowIso();
+  }
+
+  private getEntries(scope: StorageScope): Map<string, StoredCheckpoint> {
+    const scopeKey = getStorageScopeId(scope);
+    const existing = this.entriesByScope.get(scopeKey);
+    if (existing) {
+      return existing;
+    }
+
+    const created = new Map<string, StoredCheckpoint>();
+    this.entriesByScope.set(scopeKey, created);
+    return created;
   }
 }
 
@@ -146,63 +219,113 @@ export class RedisSessionStore implements SessionStore {
     this.ttlSeconds = Math.ceil((options.ttlMs ?? 5 * 60 * 1000) / 1000);
   }
 
-  async saveCheckpoint(checkpoint: RunCheckpoint): Promise<void> {
-    await this.client.set(this.key(checkpoint.runId), JSON.stringify(checkpoint), {
+  async saveCheckpoint(scope: StorageScope, checkpoint: RunCheckpoint): Promise<void>;
+  async saveCheckpoint(checkpoint: RunCheckpoint): Promise<void>;
+  async saveCheckpoint(scopeOrCheckpoint: StorageScope | RunCheckpoint, maybeCheckpoint?: RunCheckpoint): Promise<void> {
+    const { scope, checkpoint } = resolveScopeAndValue(scopeOrCheckpoint, maybeCheckpoint);
+    await this.client.set(this.key(scope, checkpoint.runId), JSON.stringify(checkpoint), {
       EX: this.ttlSeconds
     });
   }
 
-  async loadCheckpoint(runId: string): Promise<RunCheckpoint | null> {
-    const raw = await this.client.get(this.key(runId));
+  async loadCheckpoint(scope: StorageScope, runId: string): Promise<RunCheckpoint | null>;
+  async loadCheckpoint(runId: string): Promise<RunCheckpoint | null>;
+  async loadCheckpoint(scopeOrRunId: StorageScope | string, maybeRunId?: string): Promise<RunCheckpoint | null> {
+    const { scope, runId } = resolveScopeAndRunId(scopeOrRunId, maybeRunId);
+    const raw = await this.client.get(this.key(scope, runId));
     return raw ? (JSON.parse(raw) as RunCheckpoint) : null;
   }
 
-  async deleteCheckpoint(runId: string): Promise<void> {
-    await this.client.del(this.key(runId));
+  async deleteCheckpoint(scope: StorageScope, runId: string): Promise<void>;
+  async deleteCheckpoint(runId: string): Promise<void>;
+  async deleteCheckpoint(scopeOrRunId: StorageScope | string, maybeRunId?: string): Promise<void> {
+    const { scope, runId } = resolveScopeAndRunId(scopeOrRunId, maybeRunId);
+    await this.client.del(this.key(scope, runId));
   }
 
-  async heartbeat(runId: string): Promise<void> {
-    await this.client.expire(this.key(runId), this.ttlSeconds);
+  async heartbeat(scope: StorageScope, runId: string): Promise<void>;
+  async heartbeat(runId: string): Promise<void>;
+  async heartbeat(scopeOrRunId: StorageScope | string, maybeRunId?: string): Promise<void> {
+    const { scope, runId } = resolveScopeAndRunId(scopeOrRunId, maybeRunId);
+    await this.client.expire(this.key(scope, runId), this.ttlSeconds);
   }
 
-  private key(runId: string): string {
-    return `mido:run:${runId}`;
+  private key(scope: StorageScope, runId: string): string {
+    return `mido:scope:${getStorageScopeHash(scope)}:session:${runId}`;
   }
 }
 
 export class InMemoryThreadStore implements ThreadStore {
-  private readonly threads = new Map<string, StoredThread>();
+  private readonly threadsByScope = new Map<string, Map<string, StoredThread>>();
 
-  async saveThread(thread: ThreadSnapshot): Promise<void> {
-    const existing = this.threads.get(thread.threadId);
-    this.threads.set(thread.threadId, {
+  async saveThread(scope: StorageScope, thread: ThreadSnapshot): Promise<void>;
+  async saveThread(thread: ThreadSnapshot): Promise<void>;
+  async saveThread(scopeOrThread: StorageScope | ThreadSnapshot, maybeThread?: ThreadSnapshot): Promise<void> {
+    const { scope, value: thread } = resolveScopeAndNamedValue(scopeOrThread, maybeThread);
+    const threads = this.getThreads(scope);
+    const existing = threads.get(thread.threadId);
+    threads.set(thread.threadId, {
       ...structuredClone(thread),
       createdAt: existing?.createdAt ?? nowIso()
     });
   }
 
-  async loadThread(threadId: string): Promise<StoredThread | null> {
-    const thread = this.threads.get(threadId);
+  async loadThread(scope: StorageScope, threadId: string): Promise<StoredThread | null>;
+  async loadThread(threadId: string): Promise<StoredThread | null>;
+  async loadThread(scopeOrThreadId: StorageScope | string, maybeThreadId?: string): Promise<StoredThread | null> {
+    const { scope, id: threadId } = resolveScopeAndId(scopeOrThreadId, maybeThreadId);
+    const thread = this.getThreads(scope).get(threadId);
     return thread ? structuredClone(thread) : null;
+  }
+
+  private getThreads(scope: StorageScope): Map<string, StoredThread> {
+    const scopeKey = getStorageScopeId(scope);
+    const existing = this.threadsByScope.get(scopeKey);
+    if (existing) {
+      return existing;
+    }
+
+    const created = new Map<string, StoredThread>();
+    this.threadsByScope.set(scopeKey, created);
+    return created;
   }
 }
 
 export class InMemoryEventStore implements EventStore {
-  private readonly eventsByRunId = new Map<string, CoreEvent[]>();
+  private readonly eventsByScope = new Map<string, Map<string, CoreEvent[]>>();
 
-  async appendEvent(event: CoreEvent): Promise<void> {
-    const events = this.eventsByRunId.get(event.runId) ?? [];
+  async appendEvent(scope: StorageScope, event: CoreEvent): Promise<void>;
+  async appendEvent(event: CoreEvent): Promise<void>;
+  async appendEvent(scopeOrEvent: StorageScope | CoreEvent, maybeEvent?: CoreEvent): Promise<void> {
+    const { scope, value: event } = resolveScopeAndNamedValue(scopeOrEvent, maybeEvent);
+    const eventsByRunId = this.getEventsByRunId(scope);
+    const events = eventsByRunId.get(event.runId) ?? [];
     events.push(structuredClone(event));
-    this.eventsByRunId.set(event.runId, events);
+    eventsByRunId.set(event.runId, events);
   }
 
-  async loadEvents(query: EventStoreQuery): Promise<CoreEvent[]> {
-    const events = (this.eventsByRunId.get(query.runId) ?? [])
+  async loadEvents(scope: StorageScope, query: EventStoreQuery): Promise<CoreEvent[]>;
+  async loadEvents(query: EventStoreQuery): Promise<CoreEvent[]>;
+  async loadEvents(scopeOrQuery: StorageScope | EventStoreQuery, maybeQuery?: EventStoreQuery): Promise<CoreEvent[]> {
+    const { scope, value: query } = resolveScopeAndNamedValue(scopeOrQuery, maybeQuery);
+    const events = (this.getEventsByRunId(scope).get(query.runId) ?? [])
       .filter(event => query.afterSequence === undefined || event.sequence > query.afterSequence)
       .sort((left, right) => left.sequence - right.sequence);
 
     const limited = query.limit === undefined ? events : events.slice(-query.limit);
     return structuredClone(limited);
+  }
+
+  private getEventsByRunId(scope: StorageScope): Map<string, CoreEvent[]> {
+    const scopeKey = getStorageScopeId(scope);
+    const existing = this.eventsByScope.get(scopeKey);
+    if (existing) {
+      return existing;
+    }
+
+    const created = new Map<string, CoreEvent[]>();
+    this.eventsByScope.set(scopeKey, created);
+    return created;
   }
 }
 
@@ -213,10 +336,14 @@ export class FileSystemThreadStore implements ThreadStore {
     this.rootDir = options.rootDir;
   }
 
-  async saveThread(thread: ThreadSnapshot): Promise<void> {
-    const filePath = this.threadPath(thread.threadId);
+  async saveThread(scope: StorageScope, thread: ThreadSnapshot): Promise<void>;
+  async saveThread(thread: ThreadSnapshot): Promise<void>;
+  async saveThread(scopeOrThread: StorageScope | ThreadSnapshot, maybeThread?: ThreadSnapshot): Promise<void> {
+    const { scope, value: thread } = resolveScopeAndNamedValue(scopeOrThread, maybeThread);
+    await ensureScopeMetadata(this.rootDir, scope);
+    const filePath = this.threadPath(scope, thread.threadId);
     await mkdir(path.dirname(filePath), { recursive: true });
-    const existing = await this.loadThread(thread.threadId);
+    const existing = await this.loadThread(scope, thread.threadId);
     const stored: StoredThread = {
       ...thread,
       createdAt: existing?.createdAt ?? nowIso()
@@ -224,9 +351,12 @@ export class FileSystemThreadStore implements ThreadStore {
     await writeJsonAtomically(filePath, stored);
   }
 
-  async loadThread(threadId: string): Promise<StoredThread | null> {
+  async loadThread(scope: StorageScope, threadId: string): Promise<StoredThread | null>;
+  async loadThread(threadId: string): Promise<StoredThread | null>;
+  async loadThread(scopeOrThreadId: StorageScope | string, maybeThreadId?: string): Promise<StoredThread | null> {
+    const { scope, id: threadId } = resolveScopeAndId(scopeOrThreadId, maybeThreadId);
     try {
-      const raw = await readFile(this.threadPath(threadId), 'utf8');
+      const raw = await readFile(this.threadPath(scope, threadId), 'utf8');
       return JSON.parse(raw) as StoredThread;
     } catch (error) {
       if (isMissingFileError(error)) {
@@ -237,8 +367,8 @@ export class FileSystemThreadStore implements ThreadStore {
     }
   }
 
-  private threadPath(threadId: string): string {
-    return path.join(this.rootDir, 'threads', encodePathSegment(threadId), 'snapshot.json');
+  private threadPath(scope: StorageScope, threadId: string): string {
+    return path.join(getScopeRoot(this.rootDir, scope), 'threads', encodePathSegment(threadId), 'snapshot.json');
   }
 }
 
@@ -250,21 +380,28 @@ export class FileSystemEventStore implements EventStore {
     this.rootDir = options.rootDir;
   }
 
-  async appendEvent(event: CoreEvent): Promise<void> {
-    const threadId = await this.getThreadIdForEvent(event);
-    const filePath = this.eventPath(threadId, event.runId);
+  async appendEvent(scope: StorageScope, event: CoreEvent): Promise<void>;
+  async appendEvent(event: CoreEvent): Promise<void>;
+  async appendEvent(scopeOrEvent: StorageScope | CoreEvent, maybeEvent?: CoreEvent): Promise<void> {
+    const { scope, value: event } = resolveScopeAndNamedValue(scopeOrEvent, maybeEvent);
+    await ensureScopeMetadata(this.rootDir, scope);
+    const threadId = await this.getThreadIdForEvent(scope, event);
+    const filePath = this.eventPath(scope, threadId, event.runId);
     await mkdir(path.dirname(filePath), { recursive: true });
     await appendFile(filePath, `${JSON.stringify(event)}\n`, 'utf8');
   }
 
-  async loadEvents(query: EventStoreQuery): Promise<CoreEvent[]> {
+  async loadEvents(scope: StorageScope, query: EventStoreQuery): Promise<CoreEvent[]>;
+  async loadEvents(query: EventStoreQuery): Promise<CoreEvent[]>;
+  async loadEvents(scopeOrQuery: StorageScope | EventStoreQuery, maybeQuery?: EventStoreQuery): Promise<CoreEvent[]> {
+    const { scope, value: query } = resolveScopeAndNamedValue(scopeOrQuery, maybeQuery);
     try {
-      const threadId = await this.resolveThreadId(query.runId);
+      const threadId = await this.resolveThreadId(scope, query.runId);
       if (!threadId) {
         return [];
       }
 
-      const raw = await readFile(this.eventPath(threadId, query.runId), 'utf8');
+      const raw = await readFile(this.eventPath(scope, threadId, query.runId), 'utf8');
       const events = raw
         .split('\n')
         .filter(Boolean)
@@ -282,13 +419,14 @@ export class FileSystemEventStore implements EventStore {
     }
   }
 
-  private async getThreadIdForEvent(event: CoreEvent): Promise<string> {
+  private async getThreadIdForEvent(scope: StorageScope, event: CoreEvent): Promise<string> {
     if (event.type === 'RUN_STARTED' && event.threadId) {
-      this.runThreads.set(event.runId, event.threadId);
+      this.runThreads.set(this.runThreadKey(scope, event.runId), event.threadId);
+      await this.writeRunIndex(scope, event.runId, event.threadId);
       return event.threadId;
     }
 
-    const threadId = await this.resolveThreadId(event.runId);
+    const threadId = await this.resolveThreadId(scope, event.runId);
     if (threadId) {
       return threadId;
     }
@@ -296,39 +434,17 @@ export class FileSystemEventStore implements EventStore {
     throw new Error(`Cannot persist event for run "${event.runId}" before its thread id is known`);
   }
 
-  private async resolveThreadId(runId: string): Promise<string | undefined> {
-    const cached = this.runThreads.get(runId);
+  private async resolveThreadId(scope: StorageScope, runId: string): Promise<string | undefined> {
+    const cached = this.runThreads.get(this.runThreadKey(scope, runId));
     if (cached) {
       return cached;
     }
 
-    const discovered = await this.findThreadIdForRun(runId);
-    if (discovered) {
-      this.runThreads.set(runId, discovered);
-    }
-
-    return discovered;
-  }
-
-  private async findThreadIdForRun(runId: string): Promise<string | undefined> {
     try {
-      const threadEntries = await readdir(path.join(this.rootDir, 'threads'), { withFileTypes: true });
-      for (const entry of threadEntries) {
-        if (!entry.isDirectory()) {
-          continue;
-        }
-
-        try {
-          await readFile(this.eventPath(decodePathSegment(entry.name), runId), 'utf8');
-          return decodePathSegment(entry.name);
-        } catch (error) {
-          if (!isMissingFileError(error)) {
-            throw error;
-          }
-        }
-      }
-
-      return undefined;
+      const raw = await readFile(this.runIndexPath(scope, runId), 'utf8');
+      const index = JSON.parse(raw) as RunIndexEntry;
+      this.runThreads.set(this.runThreadKey(scope, runId), index.threadId);
+      return index.threadId;
     } catch (error) {
       if (isMissingFileError(error)) {
         return undefined;
@@ -338,8 +454,34 @@ export class FileSystemEventStore implements EventStore {
     }
   }
 
-  private eventPath(threadId: string, runId: string): string {
-    return path.join(this.rootDir, 'threads', encodePathSegment(threadId), 'runs', encodePathSegment(runId), 'events.jsonl');
+  private async writeRunIndex(scope: StorageScope, runId: string, threadId: string): Promise<void> {
+    const filePath = this.runIndexPath(scope, runId);
+    await mkdir(path.dirname(filePath), { recursive: true });
+    const existing = await readJsonIfExists<RunIndexEntry>(filePath);
+    await writeJsonAtomically(filePath, {
+      runId,
+      threadId,
+      createdAt: existing?.createdAt ?? nowIso()
+    } satisfies RunIndexEntry);
+  }
+
+  private runIndexPath(scope: StorageScope, runId: string): string {
+    return path.join(getScopeRoot(this.rootDir, scope), 'run-index', `${encodePathSegment(runId)}.json`);
+  }
+
+  private eventPath(scope: StorageScope, threadId: string, runId: string): string {
+    return path.join(
+      getScopeRoot(this.rootDir, scope),
+      'threads',
+      encodePathSegment(threadId),
+      'runs',
+      encodePathSegment(runId),
+      'events.jsonl'
+    );
+  }
+
+  private runThreadKey(scope: StorageScope, runId: string): string {
+    return `${getStorageScopeId(scope)}:${runId}`;
   }
 }
 
@@ -352,6 +494,96 @@ export function isDuplicateToolResult(existing: ToolResultEnvelope[], candidate:
   );
 }
 
+function resolveScopeAndValue<T>(scopeOrValue: StorageScope | T, maybeValue?: T): { scope: StorageScope; checkpoint: T } {
+  if (maybeValue !== undefined) {
+    return {
+      scope: normalizeStorageScope(scopeOrValue as StorageScope),
+      checkpoint: maybeValue
+    };
+  }
+
+  return {
+    scope: normalizeStorageScope(),
+    checkpoint: scopeOrValue as T
+  };
+}
+
+function resolveScopeAndNamedValue<T>(scopeOrValue: StorageScope | T, maybeValue?: T): { scope: StorageScope; value: T } {
+  if (maybeValue !== undefined) {
+    return {
+      scope: normalizeStorageScope(scopeOrValue as StorageScope),
+      value: maybeValue
+    };
+  }
+
+  return {
+    scope: normalizeStorageScope(),
+    value: scopeOrValue as T
+  };
+}
+
+function resolveScopeAndRunId(scopeOrRunId: StorageScope | string, maybeRunId?: string): { scope: StorageScope; runId: string } {
+  if (maybeRunId !== undefined) {
+    return {
+      scope: normalizeStorageScope(scopeOrRunId as StorageScope),
+      runId: maybeRunId
+    };
+  }
+
+  return {
+    scope: normalizeStorageScope(),
+    runId: scopeOrRunId as string
+  };
+}
+
+function resolveScopeAndId(scopeOrId: StorageScope | string, maybeId?: string): { scope: StorageScope; id: string } {
+  if (maybeId !== undefined) {
+    return {
+      scope: normalizeStorageScope(scopeOrId as StorageScope),
+      id: maybeId
+    };
+  }
+
+  return {
+    scope: normalizeStorageScope(),
+    id: scopeOrId as string
+  };
+}
+
+async function ensureScopeMetadata(rootDir: string, scope: StorageScope): Promise<void> {
+  const normalized = normalizeStorageScope(scope);
+  const scopeRoot = getScopeRoot(rootDir, normalized);
+  await mkdir(scopeRoot, { recursive: true });
+  const filePath = path.join(scopeRoot, 'scope.json');
+  const existing = await readJsonIfExists<ScopeMetadata>(filePath);
+  if (existing) {
+    return;
+  }
+
+  await writeJsonAtomically(filePath, {
+    scopeId: getStorageScopeId(normalized),
+    scopeHash: getStorageScopeHash(normalized),
+    createdAt: nowIso()
+  } satisfies ScopeMetadata);
+}
+
+async function readJsonIfExists<T>(filePath: string): Promise<T | undefined> {
+  try {
+    const raw = await readFile(filePath, 'utf8');
+    return JSON.parse(raw) as T;
+  } catch (error) {
+    if (isMissingFileError(error)) {
+      return undefined;
+    }
+
+    throw error;
+  }
+}
+
+function getScopeRoot(rootDir: string, scope: StorageScope): string {
+  return path.join(rootDir, 'scopes', getStorageScopeId(scope));
+}
+
 async function writeJsonAtomically(filePath: string, value: unknown): Promise<void> {
   const tempPath = `${filePath}.${process.pid}.${Date.now()}.tmp`;
   await writeFile(tempPath, `${JSON.stringify(value, null, 2)}\n`, 'utf8');
@@ -360,10 +592,6 @@ async function writeJsonAtomically(filePath: string, value: unknown): Promise<vo
 
 function encodePathSegment(value: string): string {
   return encodeURIComponent(value);
-}
-
-function decodePathSegment(value: string): string {
-  return decodeURIComponent(value);
 }
 
 function isMissingFileError(error: unknown): boolean {

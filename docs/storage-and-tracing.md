@@ -462,24 +462,24 @@ UI 可以把冻结态作为只读状态展示，并引导用户 fork：
 
 ```ts
 interface ThreadStore {
-  saveThread(thread: ThreadSnapshot): Promise<void>;
-  loadThread(threadId: string): Promise<StoredThread | null>;
+  saveThread(scope: StorageScope, thread: ThreadSnapshot): Promise<void>;
+  loadThread(scope: StorageScope, threadId: string): Promise<StoredThread | null>;
 }
 
 interface EventStore {
-  appendEvent(event: CoreEvent): Promise<void>;
-  loadEvents(query: EventStoreQuery): Promise<CoreEvent[]>;
+  appendEvent(scope: StorageScope, event: CoreEvent): Promise<void>;
+  loadEvents(scope: StorageScope, query: EventStoreQuery): Promise<CoreEvent[]>;
 }
 ```
 
 建议实现规则：
 
-- `ThreadStore` 以 `threadId` 为主键。
-- `EventStore` 以 `runId` 为主要查询键。
-- `ThreadStore` 可以保存 `messageIndex`，让 `messageId` 指向触发或创建它的 `runId`。
+- `ThreadStore` 以 `storageScope + threadId` 为主键。
+- `EventStore` 以 `storageScope + runId` 为主要查询键。
+- `ThreadStore` 可以保存 `messageIndex`，让 `messageId` 指向当前 scope 内触发或创建它的 `runId`。
 - event append 应保持顺序。
 - event load 应按 `sequence` 升序返回。
-- 文件系统实现会从 `RUN_STARTED.threadId` 记录 `runId -> threadId`，进程重启后也能通过目录扫描恢复这个关系。
+- 文件系统实现会从 `RUN_STARTED.threadId` 在当前 scope 下记录 `runId -> threadId` 到 `run-index/<runId>.json`，进程重启后也能在同一 scope 内恢复这个关系。
 - 存储失败默认应该让 run 失败，避免用户误以为已经完成审计记录。
 
 ## Trace Metadata
@@ -520,8 +520,8 @@ interface EventStore {
 ```ts
 import { buildRunTrace } from '@mido/protocol-core';
 
-const events = await eventStore.loadEvents({ runId });
+const events = await eventStore.loadEvents(scope, { runId });
 const trace = buildRunTrace(events);
 ```
 
-这一步不依赖文件系统。只要能从任意 `EventStore` 读出 events，就能生成同样的 run trace。
+这里的 `scope` 应由接入方服务端从可信请求上下文解析得到。这一步不依赖文件系统；只要能从当前 scope 下的任意 `EventStore` 读出 events，就能生成同样的 run trace。
