@@ -8,14 +8,107 @@ Mido 的持久化分成三类存储，不把它们合在一起：
 
 这个拆分让 checkpoint TTL 可以很短，同时不影响长期对话历史和事件追踪。
 
-## 当前文件系统实现
+## Storage scope
 
-`@mido/server-sdk` 提供两个文件系统 store：
+Mido 的 server SDK 和 client SDK 运行在接入方自己的服务端之后。SDK 不负责鉴权，也不内置 `tenantId`、`userId`、JWT、登录态等业务概念；是否鉴权、怎么鉴权、匿名用户怎么识别，都由接入方服务端决定。
 
-- `FileSystemThreadStore`
-- `FileSystemEventStore`
+为了支持不同用户、租户、workspace 或匿名会话之间的 session 隔离，存储层使用通用的 `storageScope` 作为命名空间。`storageScope` 只表达“这次 run 应该落到哪个存储空间”，不是权限系统。
 
-示例：
+```ts
+export interface StorageScope {
+  segments: string[];
+}
+
+export interface RunExecutionContext {
+  storageScope?: StorageScope;
+}
+```
+
+典型 scope 示例：
+
+```ts
+// SaaS 多租户应用
+{ segments: ['tenant', tenantId, 'user', userId] }
+
+// 单用户或消费者应用
+{ segments: ['user', userId] }
+
+// 匿名浏览器会话
+{ segments: ['anonymous', sessionCookieId] }
+
+// workspace 级隔离
+{ segments: ['workspace', workspaceId] }
+
+// 本地 demo 或单租户服务
+{ segments: ['default'] }
+```
+
+推荐调用方式是在接入方服务端完成鉴权或匿名会话解析后，把可信上下文转换成 `storageScope`，再调用 runner：
+
+```ts
+const events = runner.run(request, {
+  storageScope: {
+    segments: ['tenant', req.auth.tenantId, 'user', req.auth.userId]
+  }
+});
+
+const resumed = runner.resume(request, {
+  storageScope: {
+    segments: ['tenant', req.auth.tenantId, 'user', req.auth.userId]
+  }
+});
+```
+
+client SDK 不应该负责传 `tenantId`、`userId` 或 `storageScope`。客户端只提交 `runId`、`threadId`、消息和 tool result；服务端根据自己的可信请求上下文决定使用哪个 scope。这样可以避免把不可信的客户端字段当作存储隔离依据。
+
+如果调用方没有传 `storageScope`，SDK 应归一化为默认 scope：
+
+```ts
+{ segments: ['default'] }
+```
+
+这样可以保持现有 demo、单用户服务和旧代码的行为兼容。
+
+## Store scope contract
+
+改造后，`runId` 和 `threadId` 不再是全局唯一查找键，而是某个 `storageScope` 内部的逻辑 id。所有持久化读写都应先解析 scope，再访问底层存储。
+
+推荐的 store 语义是：
+
+```ts
+interface SessionStore {
+  saveCheckpoint(scope: StorageScope, checkpoint: RunCheckpoint): Promise<void>;
+  loadCheckpoint(scope: StorageScope, runId: string): Promise<RunCheckpoint | null>;
+  deleteCheckpoint(scope: StorageScope, runId: string): Promise<void>;
+  heartbeat(scope: StorageScope, runId: string): Promise<void>;
+}
+
+interface ThreadStore {
+  saveThread(scope: StorageScope, thread: ThreadSnapshot): Promise<void>;
+  loadThread(scope: StorageScope, threadId: string): Promise<StoredThread | null>;
+}
+
+interface EventStore {
+  appendEvent(scope: StorageScope, event: CoreEvent): Promise<void>;
+  loadEvents(scope: StorageScope, query: EventStoreQuery): Promise<CoreEvent[]>;
+}
+```
+
+`resume` 和 `cancelRun` 是最关键的隔离点。它们必须使用接入方服务端解析出的 scope 调用 `loadCheckpoint(scope, runId)`，不能只用全局 `runId` 查 checkpoint。如果在当前 scope 下找不到 checkpoint，应返回普通的 `checkpoint_not_found`，不要暴露“该 run 是否存在于其他 scope”。
+
+Redis 等 KV 存储可以使用稳定 hash 作为 key 前缀，避免把业务 id、邮箱、手机号等敏感字段直接写入 key：
+
+```text
+mido:scope:<scopeHash>:session:<runId>
+mido:scope:<scopeHash>:thread:<threadId>
+mido:scope:<scopeHash>:run-index:<runId>
+```
+
+value 中可以冗余保存 `scopeHash`、`runId`、`threadId` 等元数据，便于调试和防御性校验。
+
+## 推荐文件系统布局
+
+`@mido/server-sdk` 的文件系统存储应使用 scope-first 布局。`rootDir` 仍然可以配置为项目根目录下的 `.mido-store`：
 
 ```ts
 import {
@@ -33,28 +126,96 @@ const runner = createAgentRunner({
 });
 ```
 
-web demo 已经默认启用这个存储，保存到项目根目录的 `.mido-store`。可以通过 `MIDO_STORE_DIR` 改路径：
+web demo 可以继续通过 `MIDO_STORE_DIR` 改路径：
 
 ```bash
 MIDO_STORE_DIR=./tmp/mido-store pnpm demo
 ```
 
-文件布局：
+推荐文件布局：
 
 ```text
 .mido-store/
-  threads/
-    <threadId>/
-      snapshot.json
-      runs/
-        <runId>/
-          events.jsonl
+  scopes/
+    <scopeId>/
+      scope.json
+      sessions/
+        <runId>.checkpoint.json
+      threads/
+        <threadId>/
+          snapshot.json
+          runs/
+            <runId>/
+              events.jsonl
+      run-index/
+        <runId>.json
 ```
 
-`threads/<threadId>/snapshot.json` 保存最新 thread snapshot。  
-`threads/<threadId>/runs/<runId>/events.jsonl` 每行保存一个 `CoreEvent`，顺序和 stream 顺序一致。
+`<scopeId>` 由 `storageScope.segments` 计算得到，例如：
 
-这个布局把 thread、run、event 的关系直接体现在文件系统里。人工检查时，可以先打开某个 thread 目录，再查看它下面每次 run 的事件日志。
+```ts
+const scopeId = 'scp_' + sha256(JSON.stringify(storageScope.segments)).slice(0, 32);
+```
+
+不建议直接把 `tenantId`、`userId` 等业务字段展开成目录名，例如 `.mido-store/tenants/<tenantId>/users/<userId>/...`。SDK 应保持通用，只理解 `scopes/<scopeId>`；具体 scope 代表租户、用户、workspace 还是匿名会话，由接入方决定。
+
+`scope.json` 用于调试和校验。若 scope segments 不含敏感信息，可以保存原始 segments：
+
+```json
+{
+  "scopeId": "scp_8f3a9c2e4b1d7a0f91c6e2d5a4b7c8e9",
+  "segments": ["tenant", "tenant_123", "user", "user_456"],
+  "createdAt": "2026-05-26T10:00:00.000Z"
+}
+```
+
+如果 segments 可能包含敏感信息，应只保存 hash 和必要的非敏感调试字段：
+
+```json
+{
+  "scopeId": "scp_8f3a9c2e4b1d7a0f91c6e2d5a4b7c8e9",
+  "scopeHash": "8f3a9c2e4b1d7a0f91c6e2d5a4b7c8e9",
+  "createdAt": "2026-05-26T10:00:00.000Z"
+}
+```
+
+`sessions/<runId>.checkpoint.json` 保存短期 checkpoint，用于等待 client tool result 后 resume。这个目录可以按 TTL 清理：
+
+```json
+{
+  "scopeId": "scp_8f3a9c2e4b1d7a0f91c6e2d5a4b7c8e9",
+  "runId": "run_abc",
+  "threadId": "thread_001",
+  "checkpoint": {
+    "runId": "run_abc",
+    "threadId": "thread_001",
+    "sequence": 12,
+    "messages": [],
+    "state": {},
+    "pendingToolCalls": [],
+    "submittedToolResults": [],
+    "processedToolCallIds": [],
+    "updatedAt": "2026-05-26T10:01:00.000Z"
+  },
+  "createdAt": "2026-05-26T10:00:00.000Z",
+  "updatedAt": "2026-05-26T10:01:00.000Z",
+  "expiresAt": "2026-05-26T10:06:00.000Z"
+}
+```
+
+`threads/<threadId>/snapshot.json` 保存当前 scope 内的最新 thread snapshot。`threads/<threadId>/runs/<runId>/events.jsonl` 每行保存一个 `CoreEvent`，顺序和 stream 顺序一致。
+
+`run-index/<runId>.json` 用于在当前 scope 内通过 `runId` 快速定位 `threadId`，避免旧式全局 `EventStore.loadEvents({ runId })` 语义下扫描所有 thread：
+
+```json
+{
+  "runId": "run_abc",
+  "threadId": "thread_001",
+  "createdAt": "2026-05-26T10:00:00.000Z"
+}
+```
+
+这个布局把 scope、thread、run、event 的关系直接体现在文件系统里。人工检查时，可以先定位 scope，再打开某个 thread 目录查看 snapshot 和该 thread 下每次 run 的事件日志。
 
 `snapshot.json` 里还会保存 `messageIndex`，用于从 message id 快速找到相关 run：
 
@@ -73,12 +234,12 @@ MIDO_STORE_DIR=./tmp/mido-store pnpm demo
 }
 ```
 
-这里存的是逻辑引用，不是文件路径：
+这里存的是当前 scope 内的逻辑引用，不是全局文件路径：
 
 - `triggeredRunId`：这个 user message 触发了哪个 run。
 - `createdByRunId`：这个 assistant、tool 或 system message 由哪个 run 生成。
 
-拿到任意一个 run id 后，可以用 `EventStore.loadEvents({ runId })` 读取对应 run 的事件详情。文件系统实现会把它解析到 `threads/<threadId>/runs/<runId>/events.jsonl`。
+拿到任意一个 run id 后，可以用 `EventStore.loadEvents(scope, { runId })` 读取当前 scope 下对应 run 的事件详情。文件系统实现会通过 `run-index/<runId>.json` 定位到 `threads/<threadId>/runs/<runId>/events.jsonl`。
 
 客户端提交下一轮对话历史时，应保留 streamed event 里的 assistant `messageId`。如果客户端重新生成本地 id，后续 snapshot 只能知道这条消息属于哪个 run，不能和 `events.jsonl` 里的同一条 message id 精确对齐。
 

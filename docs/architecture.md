@@ -120,7 +120,7 @@ The server checkpoint is the minimum state needed to resume a run deterministica
 - `processedToolCallIds`
 - `updatedAt`
 
-Durable thread history and event logs are intentionally separate from checkpoints. `SessionStore` can use a short TTL for resumability, while `ThreadStore` and `EventStore` can use longer-lived deployment storage.
+Durable thread history and event logs are intentionally separate from checkpoints. `SessionStore` can use a short TTL for resumability, while `ThreadStore` and `EventStore` can use longer-lived deployment storage. In multi-user or multi-tenant deployments, callers should pass a storage scope resolved by their own server context; Mido uses that scope only as a persistence namespace and does not perform authentication itself.
 
 ## Tool policy matrix
 
