@@ -1,4 +1,20 @@
 export type {
+  AgentToolError,
+  AgentToolInput,
+  AgentToolOptions,
+  AgentToolResult,
+  AgentWorkflowAgentMode,
+  AgentWorkflowAgentResult,
+  AgentWorkflowAgentSpec,
+  AgentWorkflowInput,
+  AgentWorkflowLimits,
+  AgentWorkflowResult,
+  AgentWorkflowRunnerRequest,
+  AgentWorkflowTemplate,
+  CreateAgentWorkflowToolOptions
+} from './agents.js';
+export { AgentToolExecutionError, createAgentTool, createAgentWorkflowTool } from './agents.js';
+export type {
   AgentRunner,
   CreateAgentRunnerOptions,
   EventSink,

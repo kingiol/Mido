@@ -64,6 +64,7 @@ Use Mido when your app needs the model to reason on the server while the client 
 - Client-owned prompt preferences can be set globally with `createAgentClient({ systemPrompt })`, updated with `client.setSystemPrompt(...)`, or provided per run with `sendMessage(text, { systemPrompt })`. Static strings and context-aware provider functions are supported. They are sent with the run request but are not stored in client conversation memory.
 - MCP tools follow the same policy split: server MCP tools become `server` tools, and client MCP tools become `client_auto` tools that are advertised through `RunStartRequest.clientTools`.
 - Server-owned system prompts can be configured with `createAgentRunner({ systemPrompt })` and updated with `runner.setSystemPrompt(...)`. Static strings and context-aware provider functions are supported. When set, client-provided `system` messages are treated as untrusted supplemental preferences and wrapped under the server prompt instead of being passed through as peer instructions.
+- Server-side multi-agent orchestration is supported through `createAgentTool(...)`. A child `AgentRunner` can be wrapped as a normal `server` tool so the root runner keeps ownership of the user-facing conversation while specialists use their own prompts, tools, policies, and stores.
 - Agent Skills are supported as instruction/resource packages. Mido indexes `SKILL.md` frontmatter, progressively loads selected instructions, supports `references/` and `assets/`, emits audit events, and can run `scripts/` only when an explicit sandbox is configured.
 - Tool policy is opt-in. Existing runners behave the same unless `createAgentRunner({ toolPolicy })` is configured. Tools can add lightweight `metadata.policy` hints such as `risk`, `effects`, and `scopes`; `createDefaultToolPolicy()` hides and blocks destructive non-interactive tools while keeping `client_interactive` tools available for the existing approval flow.
 - The internal protocol stays provider-neutral.
@@ -103,6 +104,67 @@ const runner = createAgentRunner({
 ```
 
 The default policy is intentionally quiet: tools without policy metadata are allowed in balanced mode, low-risk tools are allowed, and destructive tools should use `client_interactive` if they need user approval.
+
+## Server multi-agent tools
+
+Use `createAgentTool(...)` when a specialist needs its own prompt, model, tools, or policy, but the root agent should keep ownership of the user-facing conversation:
+
+```ts
+const researchRunner = createAgentRunner({
+  modelAdapter: researchModel,
+  sessionStore,
+  systemPrompt: 'You are a research specialist. Return concise findings.'
+});
+
+const mainRunner = createAgentRunner({
+  modelAdapter: mainModel,
+  sessionStore,
+  systemPrompt: 'You are the supervisor. Delegate research tasks when useful.'
+});
+
+mainRunner.registerTool(createAgentTool({
+  agentId: 'research',
+  name: 'researchAgent',
+  description: 'Delegate focused research tasks and return concise findings.',
+  runner: researchRunner,
+  maxModelCalls: 3,
+  timeoutMs: 60_000
+}));
+```
+
+The child agent runs as a separate server run and returns a compact tool result with `agentId`, `childRunId`, status, output text, and counters.
+
+Use `createAgentWorkflowTool(...)` when the root agent should decide how many agents to create and how they depend on each other:
+
+```ts
+mainRunner.registerTool(createAgentWorkflowTool({
+  name: 'runAgentWorkflow',
+  description: 'Create and coordinate multiple agents for complex tasks.',
+  templates: {
+    research: {
+      description: 'Read-only research specialist.',
+      createRunner: () => createAgentRunner({
+        modelAdapter: researchModel,
+        sessionStore,
+        systemPrompt: 'You are a research specialist.'
+      })
+    }
+  },
+  allowAdHocAgents: true,
+  createAdHocRunner: request => createAgentRunner({
+    modelAdapter: workerModel,
+    sessionStore,
+    systemPrompt: request.agent.systemPrompt
+  }),
+  limits: {
+    maxAgents: 5,
+    maxParallelAgents: 2,
+    maxModelCallsPerAgent: 4
+  }
+}));
+```
+
+The root model can call this one server tool with a DAG-shaped request: agents without `dependsOn` can run concurrently, while dependent agents wait for upstream results. Registered templates are preferred because the server controls their model, prompt, tools, and policy. Ad-hoc agents are allowed only when explicitly enabled and still run through the server-provided factory.
 
 ## Main flow
 

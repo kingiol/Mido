@@ -67,6 +67,7 @@ import {
 } from './summary-compressor.js';
 import { selectSummaryWindowMessages } from './summary-messages.js';
 import { extractSummaryToolFacts } from './summary-tool-facts.js';
+import { AgentToolExecutionError } from './agents.js';
 
 export interface ToolExecutionContext {
   runId: string;
@@ -74,6 +75,9 @@ export interface ToolExecutionContext {
   state: JsonObject;
   metadata?: JsonObject;
   messages: AgentMessage[];
+  storageScope?: StorageScope;
+  traceId?: string;
+  toolCall?: ToolCallEnvelope;
   signal?: AbortSignal;
 }
 
@@ -1081,6 +1085,9 @@ async function* executeRunLoop(
             messages: context.messages,
             metadata: context.metadata,
             state: context.state,
+            storageScope: context.storageScope,
+            traceId: context.traceId,
+            toolCall,
             signal: dependencies.signal
           })),
           getToolTimeoutMs(definition),
@@ -1133,7 +1140,14 @@ async function* executeRunLoop(
         }
 
         const toolEndedAt = nowIso();
-        const toolError = normalizeError(error);
+        const agentToolError = error instanceof AgentToolExecutionError ? error : undefined;
+        const toolError = agentToolError ? undefined : normalizeError(error);
+        const errorOutput: JsonValue = agentToolError
+          ? agentToolError.result
+          : {
+              code: toolError?.code ?? 'tool_execution_failed',
+              message: toolError?.message ?? 'Tool execution failed'
+            };
         context.messages.push(
           {
             id: createId('msg'),
@@ -1145,10 +1159,7 @@ async function* executeRunLoop(
                 toolCallId: toolCall.toolCallId,
                 toolId: toolCall.toolId,
                 toolName: toolCall.toolName,
-                output: {
-                  code: toolError.code,
-                  message: toolError.message
-                },
+                output: errorOutput,
                 isError: true
               }
             ]
@@ -1163,10 +1174,7 @@ async function* executeRunLoop(
           toolName: toolCall.toolName,
           modelName: toolCall.modelName,
           toolRuntime: toolCall.toolRuntime,
-          output: {
-            code: toolError.code,
-            message: toolError.message
-          },
+          output: errorOutput,
           isError: true,
           trace: createToolResultTrace(context.traceId, toolCall, toolCall.createdAt, toolEndedAt, true)
         });

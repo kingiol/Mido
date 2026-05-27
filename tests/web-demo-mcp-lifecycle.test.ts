@@ -41,6 +41,16 @@ describe('web demo MCP lifecycle wiring', () => {
     expect(source).toContain('buildDemoSystemPrompt(amapMcp, demoToolkit)');
   });
 
+  it('registers server multi-agent tools in the demo', async () => {
+    const source = await readFile(new URL('../apps/web-demo/server.ts', import.meta.url), 'utf8');
+
+    expect(source).toContain('createAgentTool');
+    expect(source).toContain('createAgentWorkflowTool');
+    expect(source).toContain('demoResearchAgent');
+    expect(source).toContain('runAgentWorkflow');
+    expect(source).toContain('registerDemoAgentTools(runner)');
+  });
+
   it('creates a safe demo toolkit surface for the server agent loop', () => {
     const testDir = dirname(fileURLToPath(import.meta.url));
     const projectRoot = resolve(testDir, '..');

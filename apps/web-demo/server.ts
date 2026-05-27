@@ -8,13 +8,17 @@ import {
   FileSystemEventStore,
   FileSystemThreadStore,
   InMemorySessionStore,
+  createAgentTool,
   createAgentRunner,
+  createAgentWorkflowTool,
   createAgentSkillRegistry,
   createDeepSeekModelAdapter,
   registerManagedMcpHttpServerTools,
+  type AgentRunner,
   type AgentSkillManifest
 } from '../../packages/server-sdk/src/index.js';
 import {
+  createDemoToolkitTools,
   createDisabledDemoToolkitStatus,
   registerDemoToolkitTools,
   type DemoToolkitStatus
@@ -101,6 +105,7 @@ const runner = createAgentRunner({
 
 runner.registerTool(weatherTool);
 demoToolkit = registerDemoToolkitTools(runner, { projectRoot });
+registerDemoAgentTools(runner);
 
 amapMcp = await registerAmapMcpTools(runner);
 
@@ -268,6 +273,114 @@ async function registerAmapMcpTools(runner: Pick<ReturnType<typeof createAgentRu
   }
 }
 
+function registerDemoAgentTools(runner: Pick<AgentRunner, 'registerTool'>): void {
+  // 这里注册的是“固定专家 agent”示例：主 agent 只有在判断需要专项研究时，才会调用 demoResearchAgent。
+  // 子 agent 使用独立 runner 和独立工具注册，不会自动继承主 runner 的全部工具，避免把 MCP、workflow 等高权限能力递归暴露给子 agent。
+  runner.registerTool(createAgentTool({
+    agentId: 'demo_research',
+    name: 'demoResearchAgent',
+    description: 'Delegate focused repository, documentation, or research tasks to a read-only demo research agent.',
+    runner: createDemoSpecialistRunner(
+      'demo_research',
+      'You are a read-only research specialist for the Mido web demo. Use available tools to inspect facts, then return concise findings for the supervisor agent.'
+    ),
+    maxModelCalls: 3,
+    timeoutMs: 90_000
+  }));
+
+  // 这里注册的是“动态多 agent workflow”示例：主 agent 可以一次性声明多个 worker agents，
+  // 并用 dependsOn 控制它们是并发执行、串行执行，还是组成一个小型 DAG。
+  runner.registerTool(createAgentWorkflowTool({
+    name: 'runAgentWorkflow',
+    description: 'Create and coordinate multiple demo agents for complex tasks. Use dependsOn to control serial, parallel, or DAG execution.',
+    templates: {
+      research: {
+        description: 'Read-only research worker with demo toolkit access.',
+        createRunner: request => createDemoSpecialistRunner(
+          `workflow_${request.agent.id}`,
+          'You are a read-only research worker in a Mido demo workflow. Use tools for facts and return concise findings for downstream agents.'
+        )
+      },
+      reviewer: {
+        description: 'Review worker focused on risks, gaps, and verification.',
+        createRunner: request => createDemoSpecialistRunner(
+          `workflow_${request.agent.id}`,
+          'You are a review worker in a Mido demo workflow. Focus on risks, missing evidence, edge cases, and verification steps.'
+        )
+      },
+      writer: {
+        description: 'Synthesis worker that turns upstream findings into a clear final draft.',
+        createRunner: request => createDemoSpecialistRunner(
+          `workflow_${request.agent.id}`,
+          'You are a synthesis worker in a Mido demo workflow. Combine dependency results into a clear, concise answer.'
+        )
+      }
+    },
+    allowAdHocAgents: true,
+    createAdHocRunner: request => {
+      // ad-hoc agent 由主 agent 提出，但真正创建仍经过 server factory。
+      // demo 中允许它自定义 systemPrompt，是为了展示能力；生产环境可以在这里做审核、包裹或拒绝。
+      const requestedPrompt = request.agent.systemPrompt?.trim();
+      return createDemoSpecialistRunner(
+        `workflow_${request.agent.id}`,
+        requestedPrompt
+          ? `You are an ad-hoc worker in the Mido demo workflow.\n\n${requestedPrompt}`
+          : 'You are an ad-hoc worker in the Mido demo workflow. Stay within the requested task and return concise, evidence-based findings.'
+      );
+    },
+    limits: {
+      maxAgents: 5,
+      maxParallelAgents: 2,
+      maxModelCallsPerAgent: 3,
+      timeoutMs: 120_000
+    }
+  }));
+}
+
+function createDemoSpecialistRunner(agentId: string, systemPrompt: string): AgentRunner {
+  const childRunner = createAgentRunner({
+    modelAdapter: provider.modelAdapter,
+    sessionStore: new InMemorySessionStore({ ttlMs: 15 * 60 * 1000 }),
+    threadStore: new FileSystemThreadStore({ rootDir: storageRoot }),
+    eventStore: new FileSystemEventStore({ rootDir: storageRoot }),
+    exposeReasoningEvents,
+    systemPrompt
+  });
+
+  // 子 agent 只注册 demo 的安全 toolkit 面：仓库读取、公开检索、文档/记忆工具。
+  // 它不会注册 runAgentWorkflow、demoResearchAgent 或 Amap MCP，避免子 agent 递归创建更多 agent 或拿到主 agent 的全部能力。
+  for (const tool of createDemoToolkitTools({ projectRoot })) {
+    childRunner.registerTool(tool);
+  }
+
+  // 这个轻量工具帮助 demo 调试：让 child run 的输出和 trace 更容易区分来自哪个 worker。
+  childRunner.registerTool({
+    name: 'describeDemoAgent',
+    description: 'Return the id and role of the current demo child agent.',
+    executionPolicy: 'server',
+    inputSchema: {
+      type: 'object',
+      additionalProperties: false,
+      properties: {}
+    },
+    resultSchema: {
+      type: 'object',
+      additionalProperties: false,
+      properties: {
+        agentId: { type: 'string' },
+        role: { type: 'string' }
+      },
+      required: ['agentId', 'role']
+    },
+    execute: () => ({
+      agentId,
+      role: 'demo_child_agent'
+    })
+  });
+
+  return childRunner;
+}
+
 type AmapMcpStatus = {
   enabled: boolean;
   reason: string;
@@ -285,7 +398,7 @@ function createDisabledAmapMcpStatus(reason: string): AmapMcpStatus {
 }
 
 function buildDemoSystemPrompt(amapMcp: AmapMcpStatus, toolkit: DemoToolkitStatus): string {
-  return `You are the Mido demo agent. Use tools instead of inventing data. If the user asks for weather in a specific city, call getWeather. If the user asks for weather here, first call getLocation and then call getWeather with the returned city. If the user asks to delete or remove a draft, call confirmAction before answering.${buildToolkitPrompt(toolkit)}${amapMcp.enabled ? ` If the user asks about maps, places, routes, geocoding, reverse geocoding, coordinates, nearby search, distance, or travel planning in China, use the registered Amap MCP server tools. Amap MCP tool names are: ${amapMcp.toolNames.join(', ')}.` : ''}`;
+  return `You are the Mido demo agent. Use tools instead of inventing data. If the user asks for weather in a specific city, call getWeather. If the user asks for weather here, first call getLocation and then call getWeather with the returned city. If the user asks to delete or remove a draft, call confirmAction before answering.${buildToolkitPrompt(toolkit)}${buildDemoAgentPrompt()}${amapMcp.enabled ? ` If the user asks about maps, places, routes, geocoding, reverse geocoding, coordinates, nearby search, distance, or travel planning in China, use the registered Amap MCP server tools. Amap MCP tool names are: ${amapMcp.toolNames.join(', ')}.` : ''}`;
 }
 
 function buildToolkitPrompt(toolkit: DemoToolkitStatus): string {
@@ -294,6 +407,10 @@ function buildToolkitPrompt(toolkit: DemoToolkitStatus): string {
   }
 
   return ` Toolkit-core server tools are registered for demo testing. Workspace access is read-only and rooted at ${toolkit.workspaceRoot}. Use workspace_list, workspace_search, workspace_read_file, and workspace_stat for repository questions. Use search_web for public web search. Use fetch_url only for public URLs; private-network URLs are blocked. Use read_document, retrieval_index, retrieval_query, and memory_* tools with the demo's in-memory stores. Do not claim workspace_write_file, workspace_apply_patch, workspace_run_command, or browser_* toolkit tools are available in this demo. Registered toolkit tool names are: ${toolkit.toolNames.join(', ')}.`;
+}
+
+function buildDemoAgentPrompt(): string {
+  return ' Multi-agent demo tools are registered. Use demoResearchAgent for a single focused research delegation. Use runAgentWorkflow when a complex task should be split into multiple agents; provide agents with id, task, optional templateId, optional mode=ad_hoc, and dependsOn edges. Available workflow templates are research, reviewer, and writer. Prefer templates first; use ad-hoc agents only when these templates do not fit the task.';
 }
 
 function resolveProvider() {

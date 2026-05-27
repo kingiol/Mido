@@ -53,6 +53,30 @@ flowchart LR
 - Selects no-script Agent Skills and composes their instructions into the server-owned system prompt.
 - Stores checkpoints and resumes from tool results.
 - Optionally persists thread snapshots and event logs through `ThreadStore` and `EventStore`.
+- Supports server-side multi-agent orchestration through fixed child agent tools and dynamic workflow tools.
+
+### Server multi-agent orchestration
+
+Mido's first multi-agent primitives are `supervisor + sub-agents as server tools`.
+The root `AgentRunner` remains the user-visible loop owner. A specialist agent can
+be wrapped with `createAgentTool(...)` and registered as a normal `server` tool.
+For dynamic task decomposition, `createAgentWorkflowTool(...)` lets the root
+model submit a workflow spec with multiple agents and `dependsOn` edges.
+
+Each child agent runs as a separate server run with its own `runId`, optional
+`threadId`, model adapter, system prompt, tool registry, policy, skills, and
+stores. Child runs do not stream directly to the client. The parent receives
+compact tool results containing child run ids, status, output text, and counters.
+
+Workflow agents can be created from pre-registered templates or, when explicitly
+enabled, from an ad-hoc server factory. Templates are preferred because the
+server controls the model, prompt, tools, and policy. Ad-hoc agents never inherit
+the parent runner's tools automatically.
+
+V1 intentionally does not implement handoff, swarm, or a first-class graph
+handoff or swarm. Those patterns require explicit protocol and UI state for
+active agents, context visibility, permission inheritance, and resumable child
+client tools.
 
 ### `@mido/client-core`
 
