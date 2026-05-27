@@ -144,6 +144,16 @@ const quickPrompts = [
     label: "Toolkit Fetch",
     prompt: "Use fetch_url to fetch https://example.com and summarize the page.",
   },
+  {
+    label: "Single Agent",
+    prompt:
+      "Use demoResearchAgent to inspect the Mido server-sdk multi-agent implementation, then summarize what the child agent found.",
+  },
+  {
+    label: "Multi Agent",
+    prompt:
+      "Use runAgentWorkflow to create a workflow with two parallel research agents and one writer agent that depends on both research agents. The first research agent should inspect server multi-agent code, the second should inspect the workflow design doc, and the writer should synthesize the results.",
+  },
 ] as const;
 
 interface ChatTurn {

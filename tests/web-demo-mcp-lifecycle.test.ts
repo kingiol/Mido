@@ -165,6 +165,16 @@ describe('web demo MCP lifecycle wiring', () => {
     expect(source).toContain('memory_write');
   });
 
+  it('adds single-agent and multi-agent quick prompts to the browser demo', async () => {
+    const source = await readFile(new URL('../apps/web-demo/src/App.tsx', import.meta.url), 'utf8');
+
+    expect(source).toContain('Single Agent');
+    expect(source).toContain('demoResearchAgent');
+    expect(source).toContain('Multi Agent');
+    expect(source).toContain('runAgentWorkflow');
+    expect(source).toContain('two parallel research agents');
+  });
+
   it('exports managed MCP helpers from client-web', () => {
     expect(typeof createManagedMcpConnection).toBe('function');
     expect(typeof createManagedMcpHttpClientTools).toBe('function');
