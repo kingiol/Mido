@@ -9,9 +9,10 @@ import {
   refreshMcpClientTools,
   registerManagedMcpHttpClientTools
 } from '@mido/client-web';
+import { normalizeToolDefinition } from '@mido/protocol-core';
 import type { SearchWebProvider } from '../packages/toolkit-core/src/index.js';
 
-import { createDemoToolkitTools } from '../apps/web-demo/demo-toolkit.js';
+import { createDemoToolkitTools, registerDemoToolkitTools } from '../apps/web-demo/demo-toolkit.js';
 
 describe('web demo MCP lifecycle wiring', () => {
   it('uses managed MCP registration in the browser demo', async () => {
@@ -82,6 +83,21 @@ describe('web demo MCP lifecycle wiring', () => {
     expect(new Set(names).size).toBe(names.length);
     expect(tools.every(tool => tool.executionPolicy === 'server')).toBe(true);
     expect(tools.every(tool => typeof tool.execute === 'function')).toBe(true);
+  });
+
+  it('reports model tool names for registered demo toolkit tools', () => {
+    const testDir = dirname(fileURLToPath(import.meta.url));
+    const projectRoot = resolve(testDir, '..');
+    const status = registerDemoToolkitTools(
+      {
+        registerTool: tool => normalizeToolDefinition(tool)
+      },
+      { projectRoot }
+    );
+
+    expect(status.toolModelNames.workspace_list).toBe('server__workspace_list');
+    expect(status.toolModelNames.workspace_search).toBe('server__workspace_search');
+    expect(status.toolModelNames.search_web).toBe('server__search_web');
   });
 
   it('wires demo search_web to the configured search provider', async () => {

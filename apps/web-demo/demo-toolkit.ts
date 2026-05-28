@@ -47,6 +47,7 @@ export interface DemoToolkitStatus {
   reason: string;
   toolCount: number;
   toolNames: string[];
+  toolModelNames: Record<string, string>;
   workspaceRoot: string;
   readonlyWorkspace: boolean;
   volatileStores: boolean;
@@ -103,15 +104,16 @@ export function registerDemoToolkitTools(
   options: CreateDemoToolkitToolsOptions,
 ): DemoToolkitStatus {
   const tools = createDemoToolkitTools(options);
-  for (const tool of tools) {
-    runner.registerTool(tool);
-  }
+  const registeredTools = tools.map((tool) => runner.registerTool(tool));
 
   return {
     enabled: true,
     reason: "registered",
-    toolCount: tools.length,
-    toolNames: tools.map((tool) => tool.name),
+    toolCount: registeredTools.length,
+    toolNames: registeredTools.map((tool) => tool.name),
+    toolModelNames: Object.fromEntries(
+      registeredTools.map((tool) => [tool.name, tool.modelName]),
+    ),
     workspaceRoot: options.projectRoot,
     readonlyWorkspace: true,
     volatileStores: true,
@@ -127,6 +129,7 @@ export function createDisabledDemoToolkitStatus(
     reason,
     toolCount: 0,
     toolNames: [],
+    toolModelNames: {},
     workspaceRoot: projectRoot,
     readonlyWorkspace: true,
     volatileStores: true,

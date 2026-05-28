@@ -110,51 +110,77 @@ demoClient.registerClientTool({
 
 const quickPrompts = [
   {
+    group: "Core Tools",
     label: "Server Tool",
     prompt: "weather in shanghai",
   },
   {
+    group: "Core Tools",
     label: "Client Auto Tool",
     prompt: "weather here",
   },
   {
+    group: "Core Tools",
     label: "Interactive Tool",
     prompt: "delete draft",
   },
   {
+    group: "Toolkit Tools",
     label: "Toolkit Workspace",
     prompt:
-      "Use workspace_search to find agent-capability-roadmap.md, then summarize the toolkit section.",
+      "Use server__workspace_search to find agent-capability-roadmap.md, then summarize the toolkit section.",
   },
   {
+    group: "Toolkit Tools",
     label: "Toolkit Search",
-    prompt: "Use search_web to search for Mido agent SDK and summarize the top results.",
+    prompt: "Use server__search_web to search for Mido agent SDK and summarize the top results.",
   },
   {
+    group: "Toolkit Tools",
     label: "Toolkit File Read",
     prompt:
-      "Use workspace_read_file to read package.json and tell me the project name.",
+      "Use server__workspace_read_file to read package.json and tell me the project name.",
   },
   {
+    group: "Toolkit Tools",
     label: "Toolkit Memory",
     prompt:
-      "Use memory_write to remember that the demo favorite color is teal in scope demo, then use memory_search to find it.",
+      "Use server__memory_write to remember that the demo favorite color is teal in scope demo, then use server__memory_search to find it.",
   },
   {
+    group: "Toolkit Tools",
     label: "Toolkit Fetch",
-    prompt: "Use fetch_url to fetch https://example.com and summarize the page.",
+    prompt: "Use server__fetch_url to fetch https://example.com and summarize the page.",
   },
   {
+    group: "Agent Workflows",
     label: "Single Agent",
     prompt:
       "Use demoResearchAgent to inspect the Mido server-sdk multi-agent implementation, then summarize what the child agent found.",
   },
   {
+    group: "Agent Workflows",
     label: "Multi Agent",
     prompt:
       "Use runAgentWorkflow to create a workflow with two parallel research agents and one writer agent that depends on both research agents. The first research agent should inspect server multi-agent code, the second should inspect the workflow design doc, and the writer should synthesize the results.",
   },
 ] as const;
+
+const quickPromptGroups = quickPrompts.reduce<
+  Array<{
+    title: (typeof quickPrompts)[number]["group"];
+    prompts: Array<(typeof quickPrompts)[number]>;
+  }>
+>((groups, prompt) => {
+  const group = groups.find((item) => item.title === prompt.group);
+  if (group) {
+    group.prompts.push(prompt);
+  } else {
+    groups.push({ title: prompt.group, prompts: [prompt] });
+  }
+
+  return groups;
+}, []);
 
 interface ChatTurn {
   id: string;
@@ -379,18 +405,25 @@ export function App() {
             </span>
           </header>
 
-          <div className="prompt-grid">
-            {quickPrompts.map((item) => (
-              <button
-                key={item.label}
-                type="button"
-                className="ghost-button"
-                onClick={() => submitPrompt(item.prompt)}
-                disabled={busy}
-              >
-                <strong>{item.label}</strong>
-                <span>{item.prompt}</span>
-              </button>
+          <div className="prompt-group-list">
+            {quickPromptGroups.map((group) => (
+              <section className="prompt-group" key={group.title}>
+                <h3>{group.title}</h3>
+                <div className="prompt-grid">
+                  {group.prompts.map((item) => (
+                    <button
+                      key={item.label}
+                      type="button"
+                      className="ghost-button"
+                      onClick={() => submitPrompt(item.prompt)}
+                      disabled={busy}
+                    >
+                      <strong>{item.label}</strong>
+                      <span>{item.prompt}</span>
+                    </button>
+                  ))}
+                </div>
+              </section>
             ))}
           </div>
 

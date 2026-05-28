@@ -100,9 +100,27 @@ button {
   font-size: 0.86rem;
 }
 
+.prompt-group-list {
+  display: grid;
+  gap: 16px;
+}
+
+.prompt-group {
+  display: grid;
+  gap: 8px;
+}
+
+.prompt-group h3 {
+  margin: 0;
+  color: #425067;
+  font-size: 0.82rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
 .prompt-grid {
   display: grid;
-  gap: 10px;
+  gap: 8px;
 }
 
 .skill-panel {
@@ -196,6 +214,8 @@ button {
   align-items: flex-start;
   background: #f7efe3;
   color: #172033;
+  min-width: 0;
+  text-align: left;
 }
 
 .ghost-button span {
