@@ -1,0 +1,35 @@
+# Mido Documentation
+
+This directory is organized around how a reader usually approaches the SDK:
+start with the product shape, then read runtime contracts, then use roadmap and
+plans for future work.
+
+## Start here
+
+| Document | Purpose |
+| --- | --- |
+| [Roadmap](./roadmap.md) | Current product direction, priority order, and near-term backlog. |
+| [Architecture](./architecture.md) | Package boundaries, runtime ownership, and server/client responsibilities. |
+| [Data Flow](./data-flow.md) | End-to-end run, pause, tool execution, and resume sequence. |
+
+## Runtime contracts
+
+| Document | Purpose |
+| --- | --- |
+| [Storage and Tracing](./storage-and-tracing.md) | Checkpoints, thread/event stores, storage scope, trace metadata, and inspector data. |
+| [Agent Skills](./agent-skills.md) | Skill directory shape, server/client integration, progressive loading, audit, and script sandboxing. |
+| [Native Client Contract](../packages/conformance/docs/native-client-contract.md) | Rules native clients must follow when implementing the Mido protocol. |
+| [Event Sequence](../packages/conformance/docs/event-sequence.md) | Expected event ordering for conformance and replay. |
+
+## Planning documents
+
+| Document | Purpose |
+| --- | --- |
+| [Capability Backlog](./agent-capability-roadmap.md) | Detailed capability notes behind the roadmap. |
+| [Harness Improvement Plan](./plans/harness-agent-improvement-plan.md) | Evaluator, run artifact, retry, memory, and CI gate implementation plan. |
+
+## Archive
+
+Historical implementation plans live under [archive/plans](./archive/plans/).
+They are useful for tracing previous decisions, but they are not the current
+source of truth for priority.

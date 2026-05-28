@@ -1,4 +1,9 @@
-# Agent 能力优化路线图
+# Agent Capability Backlog
+
+> Current roadmap source of truth: [Roadmap](./roadmap.md).
+
+This document keeps the detailed capability notes behind the roadmap. Treat it
+as a backlog and decision record, not as the top-level priority index.
 
 这份文档记录当前 Mido Agent SDK 里值得补强的能力，并把它们整理成后续可以逐项推进的 backlog。
 

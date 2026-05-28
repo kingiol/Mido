@@ -39,8 +39,14 @@ Use Mido when your app needs the model to reason on the server while the client 
 ```text
 .
 ├── docs/
+│   ├── README.md
+│   ├── roadmap.md
 │   ├── architecture.md
-│   └── data-flow.md
+│   ├── data-flow.md
+│   ├── storage-and-tracing.md
+│   ├── agent-skills.md
+│   ├── plans/
+│   └── archive/
 ├── packages/
 │   ├── client-core/
 │   ├── client-ios/
@@ -186,6 +192,7 @@ Server Agent Runner
                                +--> user approve/reject -> POST resume
 ```
 
+See [Docs](./docs/README.md) for the full documentation map and [Roadmap](./docs/roadmap.md) for current priorities.
 See [Architecture](./docs/architecture.md) for the package boundaries and [Data Flow](./docs/data-flow.md) for the annotated sequence diagrams.
 See [Storage and Tracing](./docs/storage-and-tracing.md) for filesystem persistence, storage interfaces, and run inspector traces.
 

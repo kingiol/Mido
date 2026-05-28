@@ -2,6 +2,10 @@
 
 日期：2026-05-13
 
+> Current roadmap source of truth: [Roadmap](../roadmap.md). This document is a
+> detailed implementation plan for the evaluator, run artifact, recovery,
+> memory, tool-control, context-report, and CI-gate workstreams.
+
 ## 结论
 
 Mido 现在已经不是一个裸 agent。它有稳定的 server-owned loop、工具路由、checkpoint/resume、thread/event store、context summary、tool policy、trace 和 demo inspector。
