@@ -15,7 +15,7 @@
   "dependencies": {
     "@mido/mcp-core": "workspace:*",
     "@mido/protocol-core": "workspace:*",
-    "redis": "^4.7.0"
+    "redis": "^5.12.1"
   },
   "scripts": {
     "build": "tsup src/index.ts --format esm,cjs --dts"
