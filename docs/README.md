@@ -11,6 +11,7 @@ plans for future work.
 | [Roadmap](./roadmap.md) | Current product direction, priority order, and near-term backlog. |
 | [Architecture](./architecture.md) | Package boundaries, runtime ownership, and server/client responsibilities. |
 | [Data Flow](./data-flow.md) | End-to-end run, pause, tool execution, and resume sequence. |
+| [Evaluation](./evaluation.md) | Run metrics, reproducible artifacts, deterministic graders, and local smoke evals. |
 
 ## Runtime contracts
 
@@ -18,6 +19,7 @@ plans for future work.
 | --- | --- |
 | [Storage and Tracing](./storage-and-tracing.md) | Checkpoints, thread/event stores, storage scope, trace metadata, and inspector data. |
 | [Agent Skills](./agent-skills.md) | Skill directory shape, server/client integration, progressive loading, audit, and script sandboxing. |
+| [Evaluation](./evaluation.md) | Evaluator package APIs, artifact privacy defaults, fixture JSONL, and report outputs. |
 | [Native Client Contract](../packages/conformance/docs/native-client-contract.md) | Rules native clients must follow when implementing the Mido protocol. |
 | [Event Sequence](../packages/conformance/docs/event-sequence.md) | Expected event ordering for conformance and replay. |
 

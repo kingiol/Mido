@@ -13,7 +13,8 @@ export default defineConfig({
       '@mido/client-core': `${root}packages/client-core/src/index.ts`,
       '@mido/client-web': `${root}packages/client-web/src/index.tsx`,
       '@mido/toolkit-core': `${root}packages/toolkit-core/src/index.ts`,
-      '@mido/conformance': `${root}packages/conformance/src/index.ts`
+      '@mido/conformance': `${root}packages/conformance/src/index.ts`,
+      '@mido/evaluator': `${root}packages/evaluator/src/index.ts`
     }
   },
   test: {

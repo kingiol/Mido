@@ -4,6 +4,7 @@ dist
 coverage
 package-lock.json
 .mido-store
+artifacts/evals/
 .playwright-mcp
 .DS_Store
 .env

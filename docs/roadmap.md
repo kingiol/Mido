@@ -32,7 +32,7 @@ Mido 是一个 TypeScript-first SDK，面向这样的产品形态：agent loop �
 | Managed MCP lifecycle | 首版完成 | Managed connection helpers 和 refresh diffs 已存在。 |
 | Agent Skills | 首版完成 | 已支持 progressive loading 和 sandboxed script tool。 |
 | Toolkit tools | 首版完成 | 已有 workspace、retrieval、browser adapter 和 scoped memory tools。 |
-| Evaluator and run artifacts | 计划中 | 见 harness improvement plan。 |
+| Evaluator and run artifacts | 首版完成 | 已有 `@mido/evaluator`、run artifact manifest 和本地 smoke/safety fixtures。 |
 
 ## 优先级
 

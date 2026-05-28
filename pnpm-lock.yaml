@@ -87,6 +87,12 @@ importers:
         specifier: workspace:*
         version: link:../protocol-core
 
+  packages/evaluator:
+    dependencies:
+      '@mido/protocol-core':
+        specifier: workspace:*
+        version: link:../protocol-core
+
   packages/mcp-core:
     dependencies:
       '@mido/protocol-core':

@@ -22,7 +22,8 @@
       "@mido/client-core": ["packages/client-core/src/index.ts"],
       "@mido/client-web": ["packages/client-web/src/index.tsx"],
       "@mido/toolkit-core": ["packages/toolkit-core/src/index.ts"],
-      "@mido/conformance": ["packages/conformance/src/index.ts"]
+      "@mido/conformance": ["packages/conformance/src/index.ts"],
+      "@mido/evaluator": ["packages/evaluator/src/index.ts"]
     }
   }
 }

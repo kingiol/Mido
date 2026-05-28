@@ -26,7 +26,9 @@
     "demo": "concurrently -k -n server,client -c green,cyan \"pnpm demo:server\" \"pnpm demo:client\"",
     "demo:server": "tsx apps/web-demo/server.ts",
     "demo:client": "vite --config apps/web-demo/vite.config.ts",
-    "demo:build": "vite build --config apps/web-demo/vite.config.ts"
+    "demo:build": "vite build --config apps/web-demo/vite.config.ts",
+    "eval:smoke": "tsx packages/evaluator/src/cli.ts docs/evals/harness-smoke.jsonl docs/evals/harness-safety.jsonl",
+    "eval:store": "tsx packages/evaluator/src/cli-store.ts"
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^4.7.0",

@@ -33,6 +33,8 @@ Use Mido when your app needs the model to reason on the server while the client 
   Optional agent tools for workspace access, web search/fetch, document retrieval, browser automation adapters, and scoped memory.
 - `@mido/conformance`
   JSON Schema export, native client contract docs, and round-trip conformance helpers.
+- `@mido/evaluator`
+  Offline run metrics, suite aggregation, reproducible run artifacts, deterministic graders, and local smoke/safety reports.
 
 ## Repository map
 
@@ -52,6 +54,7 @@ Use Mido when your app needs the model to reason on the server while the client 
 │   ├── client-ios/
 │   ├── client-web/
 │   ├── conformance/
+│   ├── evaluator/
 │   ├── mcp-core/
 │   ├── protocol-agui/
 │   ├── protocol-core/
@@ -195,6 +198,14 @@ Server Agent Runner
 See [Docs](./docs/README.md) for the full documentation map and [Roadmap](./docs/roadmap.md) for current priorities.
 See [Architecture](./docs/architecture.md) for the package boundaries and [Data Flow](./docs/data-flow.md) for the annotated sequence diagrams.
 See [Storage and Tracing](./docs/storage-and-tracing.md) for filesystem persistence, storage interfaces, and run inspector traces.
+See [Evaluation](./docs/evaluation.md) for metrics, reproducible run artifacts, and no-key local smoke/safety evals.
+
+Run local evaluator checks with:
+
+```bash
+pnpm eval:smoke
+pnpm eval:store
+```
 
 ## MCP tool mapping
 
