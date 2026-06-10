@@ -18,6 +18,7 @@ import {
   type ReasoningDeltaEvent,
   type RunCheckpoint,
   type RunErrorEvent,
+  type RunFinishReason,
   type RunFinishedEvent,
   type RunResumeRequest,
   type RunStartedEvent,
@@ -53,6 +54,7 @@ import { applySystemPromptPolicy, type SystemPromptContext, type SystemPromptPro
 import { ToolRegistry, type RegisteredToolDefinition } from './tool-registry.js';
 import { checkModelAdapterCapabilities, type ModelAdapterCapabilities } from './capabilities.js';
 import { buildUserMemoryContext, type UserMemoryStore } from './user-memory.js';
+import { applyUserMemoryAutowrites, extractUserMemoryCandidates } from './user-memory-autowrite.js';
 import type { ToolPolicyContext, ToolPolicyDecision, ToolPolicyProvider } from './policy.js';
 import type { AgentSkillRegistry } from './skills.js';
 import {
@@ -135,6 +137,7 @@ export interface CreateAgentRunnerOptions {
   userMemoryStore?: UserMemoryStore;
   userMemoryKey?: UserMemoryKeyProvider;
   memorySearchLimit?: number;
+  autoWriteMemory?: boolean;
 }
 
 export interface UserMemoryKeyProviderContext {
@@ -173,8 +176,11 @@ interface RunContext {
   sequence: number;
   traceId: string;
   storageScope: StorageScope;
+  runStartedAt?: string;
+  sourceMessageIds?: ReadonlySet<string>;
   inputMessageIds: ReadonlySet<string>;
   triggerMessageId?: string;
+  runFinishReason?: RunFinishReason;
 }
 
 type CoreEventPayload =
@@ -223,10 +229,12 @@ export function createAgentRunner(options: CreateAgentRunnerOptions): AgentRunne
       const runId = request.runId ?? createId('run');
       const threadId = request.threadId ?? createId('thread');
       const messageId = createId('msg');
+      const runStartedAt = nowIso();
       const storageScope = normalizeStorageScope(executionContext?.storageScope);
       const eventSink = createPersistentEventSink(storageScope, options.eventSink, options.eventStore);
       const storedThread = await loadThreadSnapshot(storageScope, threadId, options.threadStore);
       const storedLifecycle = normalizeThreadLifecycle(storedThread?.lifecycle);
+      const sourceMessageIds = new Set(request.messages.filter(message => message.role !== 'system').map(message => message.id));
 
       if (isArchivedLifecycle(storedLifecycle)) {
         const started = createEvent({ runId, sequence: 0, traceId: getTraceId(runId, request.metadata) }, messageId, {
@@ -298,7 +306,9 @@ export function createAgentRunner(options: CreateAgentRunnerOptions): AgentRunne
         sequence: 0,
         traceId: getTraceId(runId, request.metadata),
         storageScope,
-        inputMessageIds: new Set(request.messages.filter(message => message.role !== 'system').map(message => message.id)),
+        runStartedAt,
+        sourceMessageIds,
+        inputMessageIds: new Set(sourceMessageIds),
         triggerMessageId: getTriggerMessageId(request.messages)
       };
       await saveThreadSnapshot(context, options.threadStore);
@@ -325,6 +335,17 @@ export function createAgentRunner(options: CreateAgentRunnerOptions): AgentRunne
           toolPolicy: options.toolPolicy,
           signal: activeRun.controller.signal
         });
+        await maybeApplyUserMemoryAutowrites(
+          context,
+          options,
+          {
+            runId,
+            threadId,
+            request,
+            storageScope
+          },
+          userMemoryKey
+        );
       } finally {
         endActiveRun(activeRuns, activeRunKey, activeRun.controller);
       }
@@ -532,21 +553,26 @@ export function createAgentRunner(options: CreateAgentRunnerOptions): AgentRunne
 
       await options.sessionStore.deleteCheckpoint(storageScope, checkpoint.runId);
 
+      const resumeRunRequest = createRunStartRequestFromCheckpoint(checkpoint);
+      const resumeContext: RunContext = {
+        runId: checkpoint.runId,
+        threadId: checkpoint.threadId,
+        messages: checkpoint.messages,
+        clientTools: checkpointClientTools,
+        metadata: checkpoint.metadata,
+        contextBudget: checkpoint.contextBudget,
+        isResume: true,
+        state: checkpoint.state,
+        sequence: checkpoint.sequence,
+        traceId: getTraceId(checkpoint.runId, checkpoint.metadata),
+        storageScope,
+        runStartedAt: checkpoint.runStartedAt,
+        sourceMessageIds: checkpoint.sourceMessageIds?.length ? new Set(checkpoint.sourceMessageIds) : undefined,
+        inputMessageIds: new Set(checkpoint.messages.map(message => message.id))
+      };
+
       yield* executeRunLoop(
-        {
-          runId: checkpoint.runId,
-          threadId: checkpoint.threadId,
-          messages: checkpoint.messages,
-          clientTools: checkpointClientTools,
-          metadata: checkpoint.metadata,
-          contextBudget: checkpoint.contextBudget,
-          isResume: true,
-          state: checkpoint.state,
-          sequence: checkpoint.sequence,
-          traceId: getTraceId(checkpoint.runId, checkpoint.metadata),
-          storageScope,
-          inputMessageIds: new Set(checkpoint.messages.map(message => message.id))
-        },
+        resumeContext,
         {
           registry,
           runtimeDefinitions,
@@ -558,6 +584,16 @@ export function createAgentRunner(options: CreateAgentRunnerOptions): AgentRunne
           exposeReasoningEvents: options.exposeReasoningEvents,
           toolPolicy: options.toolPolicy,
           signal: activeRun.controller.signal
+        }
+      );
+      await maybeApplyUserMemoryAutowrites(
+        resumeContext,
+        options,
+        {
+          runId: checkpoint.runId,
+          threadId: checkpoint.threadId,
+          request: resumeRunRequest,
+          storageScope
         }
       );
       } finally {
@@ -1040,9 +1076,11 @@ async function* executeRunLoop(
 
     if (toolCalls.length === 0) {
       await saveThreadSnapshot(context, dependencies.threadStore);
+      const finalRunFinishReason: RunFinishReason = modelFinishReason === 'cancelled' ? 'cancelled' : 'completed';
+      context.runFinishReason = finalRunFinishReason;
       const finishedEvent = createEvent(context, assistantMessageId, {
         type: 'RUN_FINISHED',
-        finishReason: modelFinishReason === 'cancelled' ? 'cancelled' : 'completed'
+        finishReason: finalRunFinishReason
       });
       yield* emitOne(finishedEvent, dependencies.eventSink);
       return;
@@ -1226,6 +1264,12 @@ async function* executeRunLoop(
         submittedToolResults: [],
         updatedAt: nowIso()
       };
+      if (context.runStartedAt) {
+        checkpoint.runStartedAt = context.runStartedAt;
+      }
+      if (context.sourceMessageIds) {
+        checkpoint.sourceMessageIds = [...context.sourceMessageIds];
+      }
       await dependencies.sessionStore.saveCheckpoint(context.storageScope, checkpoint);
 
       const waitingEvent = createEvent(context, assistantMessageId, {
@@ -1275,6 +1319,18 @@ function mergeStoredThreadMessages(storedMessages: AgentMessage[], requestMessag
     ...requestSystemMessages,
     ...mergedMessages
   ];
+}
+
+function createRunStartRequestFromCheckpoint(checkpoint: RunCheckpoint): RunStartRequest {
+  return {
+    runId: checkpoint.runId,
+    threadId: checkpoint.threadId,
+    messages: checkpoint.messages,
+    clientTools: checkpoint.clientTools,
+    contextBudget: checkpoint.contextBudget,
+    state: checkpoint.state,
+    metadata: checkpoint.metadata
+  };
 }
 
 async function loadThreadSnapshot(storageScope: StorageScope, threadId: string | undefined, threadStore?: ThreadStore): Promise<StoredThread | null> {
@@ -2227,6 +2283,45 @@ function composeSystemPromptProvider(
     const skillPrompt = await skillRegistry?.buildSystemPrompt(context);
     return [basePrompt, skillPrompt, memoryPrompt].map(part => part?.trim()).filter(Boolean).join('\n\n');
   };
+}
+
+async function maybeApplyUserMemoryAutowrites(
+  context: RunContext,
+  options: Pick<CreateAgentRunnerOptions, 'autoWriteMemory' | 'userMemoryKey' | 'userMemoryStore'>,
+  keyContext: UserMemoryKeyProviderContext,
+  resolvedUserMemoryKey?: string
+): Promise<void> {
+  if (
+    !options.autoWriteMemory ||
+    !options.userMemoryStore ||
+    context.runFinishReason !== 'completed' ||
+    !context.runStartedAt ||
+    !context.sourceMessageIds ||
+    context.sourceMessageIds.size === 0
+  ) {
+    return;
+  }
+
+  try {
+    const userMemoryKey = resolvedUserMemoryKey ?? await resolveUserMemoryKey(options.userMemoryKey, keyContext);
+    if (!userMemoryKey) {
+      return;
+    }
+
+    const candidates = extractUserMemoryCandidates(context.messages, {
+      since: context.runStartedAt,
+      sourceMessageIds: context.sourceMessageIds,
+      sourceRunId: context.runId,
+      sourceThreadId: context.threadId
+    });
+    if (candidates.length === 0) {
+      return;
+    }
+
+    await applyUserMemoryAutowrites(options.userMemoryStore, userMemoryKey, candidates);
+  } catch {
+    return;
+  }
 }
 
 async function resolveUserMemoryKey(

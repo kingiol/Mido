@@ -12,6 +12,16 @@
       "type": "integer",
       "minimum": 0
     },
+    "runStartedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "sourceMessageIds": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
     "messages": {
       "type": "array",
       "items": {

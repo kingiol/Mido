@@ -5,7 +5,7 @@ import { nowIso, type AgentMessage, type JsonObject } from '@mido/protocol-core'
 import { getStorageScopeHash, normalizeStorageScope, type StorageScope } from './store.js';
 
 export type UserMemoryType = 'semantic' | 'episodic' | 'procedural';
-export type UserMemoryStatus = 'active' | 'superseded' | 'expired';
+export type UserMemoryStatus = 'active' | 'pending' | 'superseded' | 'expired';
 
 export interface UserMemoryEntry {
   id: string;
@@ -39,11 +39,13 @@ export interface UserMemorySearchInput {
   limit?: number;
   minConfidence?: number;
   includeExpired?: boolean;
+  statuses?: UserMemoryStatus[];
 }
 
 export interface UserMemoryWriteInput {
   id?: string;
   type?: UserMemoryType;
+  status?: UserMemoryStatus;
   text: string;
   reason?: string;
   sourceThreadId?: string;
@@ -51,6 +53,21 @@ export interface UserMemoryWriteInput {
   confidence?: number;
   importance?: number;
   expiresAt?: string;
+  supersededBy?: string;
+  tags?: string[];
+  metadata?: JsonObject;
+}
+
+export interface UserMemoryUpdateInput {
+  text?: string;
+  status?: UserMemoryStatus;
+  reason?: string;
+  sourceThreadId?: string;
+  sourceRunId?: string;
+  confidence?: number;
+  importance?: number;
+  expiresAt?: string;
+  supersededBy?: string;
   tags?: string[];
   metadata?: JsonObject;
 }
@@ -58,6 +75,7 @@ export interface UserMemoryWriteInput {
 export interface UserMemoryStats {
   total: number;
   active: number;
+  pending: number;
   expired: number;
   superseded: number;
 }
@@ -68,6 +86,7 @@ export interface UserMemoryStore {
   read(userKey: string, id: string): Promise<UserMemoryEntry | undefined>;
   write(userKey: string, input: UserMemoryWriteInput): Promise<UserMemoryEntry>;
   delete(userKey: string, id: string): Promise<boolean>;
+  update?(userKey: string, id: string, patch: UserMemoryUpdateInput): Promise<UserMemoryEntry | undefined>;
   deleteAllForUser?(userKey: string): Promise<number>;
   stats?(userKey: string): Promise<UserMemoryStats>;
 }
@@ -104,13 +123,14 @@ export class InMemoryUserMemoryStore implements UserMemoryStore {
     }
 
     const types = new Set(input.types ?? ['semantic', 'episodic']);
+    const statuses = new Set(input.statuses ?? (input.includeExpired ? ['active', 'expired'] : ['active']));
     const minConfidence = input.minConfidence ?? 0;
     const candidates = [...entries.values()].filter(entry => {
       if (!types.has(entry.type)) {
         return false;
       }
 
-      if (entry.status !== 'active') {
+      if (!statuses.has(entry.status)) {
         return false;
       }
 
@@ -157,6 +177,8 @@ export class InMemoryUserMemoryStore implements UserMemoryStore {
       existing.expiresAt = input.expiresAt ?? existing.expiresAt;
       existing.tags = mergeTags(existing.tags, input.tags);
       existing.metadata = input.metadata ? cloneJsonObject(input.metadata) : existing.metadata;
+      existing.status = mergeMemoryStatus(existing.status, input.status ?? existing.status);
+      existing.supersededBy = input.supersededBy ?? existing.supersededBy;
       existing.updatedAt = nowIso();
       return cloneEntry(existing);
     }
@@ -173,7 +195,8 @@ export class InMemoryUserMemoryStore implements UserMemoryStore {
       confidence: clamp01(input.confidence ?? 1),
       importance: clamp01(input.importance ?? 0.5),
       contentHash,
-      status: 'active',
+      status: input.status ?? 'active',
+      supersededBy: input.supersededBy,
       createdAt,
       updatedAt: createdAt,
       expiresAt: input.expiresAt,
@@ -188,6 +211,36 @@ export class InMemoryUserMemoryStore implements UserMemoryStore {
     return this.entriesByUserKey.get(userKey)?.delete(id) ?? false;
   }
 
+  async update(userKey: string, id: string, patch: UserMemoryUpdateInput): Promise<UserMemoryEntry | undefined> {
+    const entry = this.entriesByUserKey.get(userKey)?.get(id);
+    if (!entry) {
+      return undefined;
+    }
+
+    if (patch.text !== undefined) {
+      const nextText = normalizeMemoryText(patch.text);
+      if (!nextText) {
+        throw new Error('User memory text must be non-empty');
+      }
+      entry.text = nextText;
+      entry.contentHash = createContentHash(entry.text);
+    }
+    if (patch.status !== undefined) {
+      entry.status = patch.status;
+    }
+    entry.reason = patch.reason ?? entry.reason;
+    entry.sourceRunId = patch.sourceRunId ?? entry.sourceRunId;
+    entry.sourceThreadId = patch.sourceThreadId ?? entry.sourceThreadId;
+    entry.confidence = Math.max(entry.confidence, clamp01(patch.confidence ?? entry.confidence));
+    entry.importance = Math.max(entry.importance, clamp01(patch.importance ?? entry.importance));
+    entry.expiresAt = patch.expiresAt ?? entry.expiresAt;
+    entry.supersededBy = patch.supersededBy ?? entry.supersededBy;
+    entry.tags = mergeTags(entry.tags, patch.tags);
+    entry.metadata = patch.metadata ? cloneJsonObject(patch.metadata) : entry.metadata;
+    entry.updatedAt = nowIso();
+    return cloneEntry(entry);
+  }
+
   async deleteAllForUser(userKey: string): Promise<number> {
     const count = this.entriesByUserKey.get(userKey)?.size ?? 0;
     this.entriesByUserKey.delete(userKey);
@@ -200,6 +253,7 @@ export class InMemoryUserMemoryStore implements UserMemoryStore {
     return {
       total: entries.length,
       active: entries.filter(entry => entry.status === 'active' && !isExpired(entry, now)).length,
+      pending: entries.filter(entry => entry.status === 'pending').length,
       expired: entries.filter(entry => entry.status === 'expired' || isExpired(entry, now)).length,
       superseded: entries.filter(entry => entry.status === 'superseded').length
     };
@@ -357,6 +411,17 @@ function isExpired(entry: UserMemoryEntry, now: string): boolean {
 
 function mergeTags(left: string[] | undefined, right: string[] | undefined): string[] | undefined {
   return normalizeTags([...(left ?? []), ...(right ?? [])]);
+}
+
+function mergeMemoryStatus(current: UserMemoryStatus, incoming: UserMemoryStatus): UserMemoryStatus {
+  const priority: Record<UserMemoryStatus, number> = {
+    active: 3,
+    pending: 2,
+    expired: 1,
+    superseded: 0
+  };
+
+  return priority[incoming] > priority[current] ? incoming : current;
 }
 
 function normalizeTags(tags: string[] | undefined): string[] | undefined {

@@ -62,6 +62,20 @@ describe('server user memory', () => {
     await expect(store.read(alpha, alphaMemory.id)).resolves.toBeUndefined();
   });
 
+  it('rejects blank text updates without corrupting the stored memory', async () => {
+    const store = new InMemoryUserMemoryStore();
+    const userKey = store.deriveUserKey({ segments: ['tenant', 'alpha'] });
+    const memory = await store.write(userKey, {
+      text: 'The user prefers pnpm workspaces for TypeScript packages.',
+      confidence: 0.95
+    });
+
+    await expect(store.update(userKey, memory.id, { text: '   ' })).rejects.toThrow('User memory text must be non-empty');
+    await expect(store.read(userKey, memory.id)).resolves.toMatchObject({
+      text: 'The user prefers pnpm workspaces for TypeScript packages.'
+    });
+  });
+
   it('injects relevant memories into the runner system prompt', async () => {
     const adapter = new ScriptedModelAdapter([
       [

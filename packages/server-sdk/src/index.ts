@@ -37,6 +37,7 @@ export type {
   UserMemoryStore,
   UserMemoryType,
   UserMemoryStatus,
+  UserMemoryUpdateInput,
   UserMemoryWriteInput
 } from './user-memory.js';
 export {
@@ -45,6 +46,19 @@ export {
   deriveUserMemoryKey,
   InMemoryUserMemoryStore
 } from './user-memory.js';
+export type {
+  ApplyUserMemoryAutowritesOptions,
+  UserMemoryAutowriteDecision,
+  UserMemoryCandidate,
+  UserMemoryCandidateEvaluationContext,
+  UserMemoryCandidateSourceKind,
+  UserMemoryExtractionOptions
+} from './user-memory-autowrite.js';
+export {
+  applyUserMemoryAutowrites,
+  evaluateUserMemoryCandidate,
+  extractUserMemoryCandidates
+} from './user-memory-autowrite.js';
 export type {
   CapabilityCheckFailure,
   CapabilitySupport,

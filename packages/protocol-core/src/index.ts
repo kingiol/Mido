@@ -141,6 +141,8 @@ export interface RunCheckpoint {
   runId: string;
   threadId?: string;
   sequence: number;
+  runStartedAt?: string;
+  sourceMessageIds?: string[];
   messages: AgentMessage[];
   clientTools?: ClientToolDefinition[];
   contextBudget?: RunContextBudget;
@@ -594,6 +596,8 @@ export const runCheckpointSchema: JSONSchema = {
     runId: { type: 'string' },
     threadId: { type: 'string' },
     sequence: { type: 'integer', minimum: 0 },
+    runStartedAt: timestampSchema,
+    sourceMessageIds: { type: 'array', items: { type: 'string' } },
     messages: { type: 'array', items: agentMessageSchema },
     clientTools: {
       type: 'array',
