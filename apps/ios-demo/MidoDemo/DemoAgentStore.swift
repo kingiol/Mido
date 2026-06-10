@@ -134,7 +134,7 @@ final class DemoAgentStore: ObservableObject, @unchecked Sendable {
       let transport = try makeTransport()
       let agentClient = AgentClient(
         transport: transport,
-        systemPrompt: "You are running inside the Mido iOS demo."
+        systemPrompt: DemoPrompts.systemPrompt
       )
       let subscriptionID = await agentClient.subscribe { [weak self] snapshot in
         Task { @MainActor [weak self] in

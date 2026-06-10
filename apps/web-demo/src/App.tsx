@@ -13,6 +13,7 @@ import type { ClientSkillStore, ClientSkillSummary } from "@mido/client-web";
 import { buildRunTrace, type AgentMessage } from "@mido/protocol-core";
 
 import { exportEventsAsJsonl } from "./export-jsonl.js";
+import { DEMO_CLIENT_SYSTEM_PROMPT } from "../prompts.js";
 
 const transport = createBrowserSseTransport({
   runUrl: "/api/run",
@@ -44,7 +45,6 @@ class DemoSkillStore implements ClientSkillStore {
   }
 }
 
-const DEMO_CLIENT_SYSTEM_PROMPT = "每次回答后面都需要带：大爷好。";
 const demoSkillManager = createAgentSkillManager({
   store: new DemoSkillStore(),
 });

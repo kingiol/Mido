@@ -7,6 +7,7 @@ import type { JsonObject, JsonValue } from '@mido/protocol-core';
 
 import type { ServerToolRuntimeDefinition, ToolExecutionContext } from './runner.js';
 import type { SystemPromptContext } from './system-prompt.js';
+import { SKILL_SECTION_HEADER } from './prompts/skills.js';
 
 export interface AgentSkillManifest {
   id: string;
@@ -310,7 +311,7 @@ export async function createAgentSkillRegistry(options: CreateAgentSkillRegistry
         return undefined;
       }
 
-      const sections: string[] = ['Agent Skills:'];
+      const sections: string[] = [SKILL_SECTION_HEADER];
       let remainingBytes = maxPromptBytes - byteLength(sections.join('\n\n'));
 
       for (const selection of selections) {
