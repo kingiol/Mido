@@ -52,6 +52,7 @@ import {
 import { applySystemPromptPolicy, type SystemPromptContext, type SystemPromptProvider } from './system-prompt.js';
 import { ToolRegistry, type RegisteredToolDefinition } from './tool-registry.js';
 import { checkModelAdapterCapabilities, type ModelAdapterCapabilities } from './capabilities.js';
+import { buildUserMemoryContext, type UserMemoryStore } from './user-memory.js';
 import type { ToolPolicyContext, ToolPolicyDecision, ToolPolicyProvider } from './policy.js';
 import type { AgentSkillRegistry } from './skills.js';
 import {
@@ -131,7 +132,21 @@ export interface CreateAgentRunnerOptions {
   systemPrompt?: SystemPromptProvider;
   toolPolicy?: ToolPolicyProvider;
   skillRegistry?: AgentSkillRegistry;
+  userMemoryStore?: UserMemoryStore;
+  userMemoryKey?: UserMemoryKeyProvider;
+  memorySearchLimit?: number;
 }
+
+export interface UserMemoryKeyProviderContext {
+  runId: string;
+  threadId?: string;
+  request: RunStartRequest;
+  storageScope: StorageScope;
+}
+
+export type UserMemoryKeyProvider =
+  | string
+  | ((context: UserMemoryKeyProviderContext) => Promise<string | undefined> | string | undefined);
 
 export interface RunExecutionContext {
   storageScope?: StorageScope;
@@ -249,6 +264,18 @@ export function createAgentRunner(options: CreateAgentRunnerOptions): AgentRunne
         metadata: request.metadata
       });
       const requestMessages = await resolveRunMessagesFromThreadSnapshot(storageScope, request, options.threadStore);
+      const userMemoryKey = await resolveUserMemoryKey(options.userMemoryKey, {
+        runId,
+        threadId,
+        request,
+        storageScope
+      });
+      const memoryPrompt = await buildUserMemoryContext(
+        options.userMemoryStore,
+        userMemoryKey,
+        requestMessages,
+        { limit: options.memorySearchLimit }
+      );
       const messages = await applySystemPromptPolicy(
         requestMessages,
         {
@@ -257,7 +284,7 @@ export function createAgentRunner(options: CreateAgentRunnerOptions): AgentRunne
           request,
           tools
         },
-        composeSystemPromptProvider(systemPrompt, options.skillRegistry)
+        composeSystemPromptProvider(systemPrompt, options.skillRegistry, memoryPrompt)
       );
       const context: RunContext = {
         runId,
@@ -2188,17 +2215,27 @@ function getRunTools(registry: ToolRegistry, clientTools: RegisteredClientToolDe
 
 function composeSystemPromptProvider(
   baseProvider: SystemPromptProvider | undefined,
-  skillRegistry: AgentSkillRegistry | undefined
+  skillRegistry: AgentSkillRegistry | undefined,
+  memoryPrompt?: string
 ): SystemPromptProvider | undefined {
-  if (!baseProvider && !skillRegistry) {
+  if (!baseProvider && !skillRegistry && !memoryPrompt) {
     return undefined;
   }
 
   return async (context: SystemPromptContext) => {
     const basePrompt = typeof baseProvider === 'function' ? await baseProvider(context) : baseProvider;
     const skillPrompt = await skillRegistry?.buildSystemPrompt(context);
-    return [basePrompt, skillPrompt].map(part => part?.trim()).filter(Boolean).join('\n\n');
+    return [basePrompt, skillPrompt, memoryPrompt].map(part => part?.trim()).filter(Boolean).join('\n\n');
   };
+}
+
+async function resolveUserMemoryKey(
+  provider: UserMemoryKeyProvider | undefined,
+  context: UserMemoryKeyProviderContext
+): Promise<string | undefined> {
+  const key = typeof provider === 'function' ? await provider(context) : provider;
+  const trimmed = key?.trim();
+  return trimmed || undefined;
 }
 
 async function getPolicyVisibleRunTools(

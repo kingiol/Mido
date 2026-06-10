@@ -23,9 +23,28 @@ export type {
   ModelAdapterRunInput,
   RunExecutionContext,
   ServerToolRuntimeDefinition,
-  ToolExecutionContext
+  ToolExecutionContext,
+  UserMemoryKeyProvider,
+  UserMemoryKeyProviderContext
 } from './runner.js';
 export { createAgentRunner } from './runner.js';
+export type {
+  UserMemoryContextOptions,
+  UserMemoryEntry,
+  UserMemorySearchInput,
+  UserMemorySearchResult,
+  UserMemoryStats,
+  UserMemoryStore,
+  UserMemoryType,
+  UserMemoryStatus,
+  UserMemoryWriteInput
+} from './user-memory.js';
+export {
+  buildUserMemoryContext,
+  DEFAULT_USER_MEMORY_SEARCH_LIMIT,
+  deriveUserMemoryKey,
+  InMemoryUserMemoryStore
+} from './user-memory.js';
 export type {
   CapabilityCheckFailure,
   CapabilitySupport,
@@ -162,7 +181,8 @@ export { findLastSummaryIndex, selectSummaryWindowMessages } from './summary-mes
 export type { SummaryToolFact } from './summary-tool-facts.js';
 export { extractSummaryToolFacts } from './summary-tool-facts.js';
 export type { SummaryCompressorInput, SummaryCompressorOutput } from './summary-compressor.js';
-export { SUMMARY_COMPRESSOR_SYSTEM_PROMPT, buildSummaryCompressorMessages } from './summary-compressor.js';
+export { buildSummaryCompressorMessages } from './summary-compressor.js';
+export { SUMMARY_COMPRESSOR_SYSTEM_PROMPT } from './prompts/summary-compressor.js';
 export type {
   ContextBudgetInput,
   ResolvedContextBudget,

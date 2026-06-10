@@ -25,6 +25,8 @@ Mido 现有 `SessionStore` / `ThreadStore` / `EventStore` 三层存储均以 run
 | 写入策略 | Agent 显式 tool（已有） + post-run 自动 LLM 提取（新增） | 前者精准即时，后者覆盖隐含信息 |
 | 遗忘策略 | TTL + 访问频率衰减 + salience 评分 + 语义取代 四层叠加 | 同时满足合规、存储管理和检索精度 |
 
+> 关于“自主写入 memory”的更细设计，请参见 [User Memory Autonomous Write Design](./user-memory-autonomous-write-design.md)。
+
 ## 证据索引
 
 - 现有三层存储接口：`packages/server-sdk/src/store.ts:52-117` — `SessionStore`、`ThreadStore`、`EventStore`、`StorageScope`
