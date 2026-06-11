@@ -29,6 +29,7 @@ plans for future work.
 | --- | --- |
 | [Capability Backlog](./agent-capability-roadmap.md) | Detailed capability notes behind the roadmap. |
 | [Harness Improvement Plan](./plans/harness-agent-improvement-plan.md) | Evaluator, run artifact, retry, memory, and CI gate implementation plan. |
+| [User Memory Design](./plans/user-memory-design.md) | Redis Stack-based long-term memory store, semantic search, post-run extraction, and agent loop integration. |
 | [User Memory Autonomous Write Design](./plans/user-memory-autonomous-write-design.md) | Candidate extraction, policy gating, explicit user keys, and autonomous write lifecycle. |
 
 ## Archive
