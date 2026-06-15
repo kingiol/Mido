@@ -10,12 +10,12 @@
 
 可借鉴点：
 
-| 来源 | 值得学习的机制 | Mido 应采用的方式 |
-| --- | --- | --- |
-| Codex / Claude Code / Gemini CLI | 项目级持久规则文件，分层加载，用户可覆盖低优先级偏好 | 保留 server-owned prompt，并为 project memory、skills、user memory 建立来源和优先级 |
-| `ultraworkers/claw-code` | `SystemPromptBuilder`、静态/动态 prompt boundary、instruction discovery、context budget | 将 prompt builder 标准化，并在运行时输出 prompt/context assembly report |
-| `code-yeongyu/lazycodex` | 外部化 plan/ledger/evidence/checkpoint，subagent 输出必须独立验证 | 引入 durable goal ledger 和 verification gate，而不是只靠模型自述 |
-| `Yeachan-Heo/gajae-code` | system prompt、tool prompt、role prompt、memory prompt、plan mode 分层 | 采用分层 prompt registry，但不采用其中越权或不安全的人格化规则 |
+| 来源                             | 值得学习的机制                                                                          | Mido 应采用的方式                                                                   |
+| -------------------------------- | --------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| Codex / Claude Code / Gemini CLI | 项目级持久规则文件，分层加载，用户可覆盖低优先级偏好                                    | 保留 server-owned prompt，并为 project memory、skills、user memory 建立来源和优先级 |
+| `ultraworkers/claw-code`         | `SystemPromptBuilder`、静态/动态 prompt boundary、instruction discovery、context budget | 将 prompt builder 标准化，并在运行时输出 prompt/context assembly report             |
+| `code-yeongyu/lazycodex`         | 外部化 plan/ledger/evidence/checkpoint，subagent 输出必须独立验证                       | 引入 durable goal ledger 和 verification gate，而不是只靠模型自述                   |
+| `Yeachan-Heo/gajae-code`         | system prompt、tool prompt、role prompt、memory prompt、plan mode 分层                  | 采用分层 prompt registry，但不采用其中越权或不安全的人格化规则                      |
 
 明确不采用：
 
@@ -194,14 +194,14 @@ interface EvidenceEntry {
 
 建议模式：
 
-| Mode | 使用场景 | 主要约束 |
-| --- | --- | --- |
-| `clarify` | 目标、约束、成功标准不清楚 | 只问必要问题，不提前实现 |
-| `plan` | 高风险或多步骤任务 | 输出规格、影响范围、验证计划 |
-| `execute` | 用户已确认方案或任务足够明确 | 小步实现，小步验证 |
-| `debug` | bug、测试失败、异常行为 | reproduce -> isolate -> hypothesize -> instrument -> fix -> regression test |
-| `review` | 用户请求 review | findings first，按严重度排序 |
-| `document` | 沉淀机制、规则、ADR | 区分事实、决策、后续工作 |
+| Mode       | 使用场景                     | 主要约束                                                                    |
+| ---------- | ---------------------------- | --------------------------------------------------------------------------- |
+| `clarify`  | 目标、约束、成功标准不清楚   | 只问必要问题，不提前实现                                                    |
+| `plan`     | 高风险或多步骤任务           | 输出规格、影响范围、验证计划                                                |
+| `execute`  | 用户已确认方案或任务足够明确 | 小步实现，小步验证                                                          |
+| `debug`    | bug、测试失败、异常行为      | reproduce -> isolate -> hypothesize -> instrument -> fix -> regression test |
+| `review`   | 用户请求 review              | findings first，按严重度排序                                                |
+| `document` | 沉淀机制、规则、ADR          | 区分事实、决策、后续工作                                                    |
 
 运行时不需要把 mode 暴露为复杂 UI，先可以作为 `RunStartRequest.metadata.mode` 或 server option。
 
