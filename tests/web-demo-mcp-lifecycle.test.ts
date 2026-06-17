@@ -13,6 +13,7 @@ import { normalizeToolDefinition } from '@mido/protocol-core';
 import type { SearchWebProvider } from '../packages/toolkit-core/src/index.js';
 
 import { createDemoToolkitTools, registerDemoToolkitTools } from '../apps/web-demo/demo-toolkit.js';
+import { buildDemoSystemPrompt } from '../apps/web-demo/prompts.js';
 
 describe('web demo MCP lifecycle wiring', () => {
   it('uses managed MCP registration in the browser demo', async () => {
@@ -40,6 +41,39 @@ describe('web demo MCP lifecycle wiring', () => {
 
     expect(source).toContain('registerDemoToolkitTools');
     expect(source).toContain('buildDemoSystemPrompt(amapMcp, demoToolkit)');
+  });
+
+  it('builds the demo agent prompt from structured harness sections', () => {
+    const prompt = buildDemoSystemPrompt(
+      {
+        enabled: true,
+        reason: 'registered',
+        toolCount: 2,
+        toolNames: ['amap_weather', 'amap_route'],
+      },
+      {
+        enabled: true,
+        reason: 'registered',
+        toolCount: 2,
+        toolNames: ['workspace_read_file', 'search_web'],
+        toolModelNames: {
+          workspace_read_file: 'server__workspace_read_file',
+          search_web: 'server__search_web',
+        },
+        workspaceRoot: '/tmp/mido-demo',
+        readonlyWorkspace: true,
+        volatileStores: true,
+      },
+    );
+
+    expect(prompt).toContain('# Identity');
+    expect(prompt).toContain('# Tool Use');
+    expect(prompt).toContain('# Mido Demo Tool Routing');
+    expect(prompt).toContain('# Demo Toolkit Tools');
+    expect(prompt).toContain('# Amap MCP Tools');
+    expect(prompt).toContain('server__workspace_read_file');
+    expect(prompt).toContain('server__search_web');
+    expect(prompt).toContain('Do not claim workspace_write_file');
   });
 
   it('registers server multi-agent tools in the demo', async () => {

@@ -70,6 +70,16 @@ export { checkModelAdapterCapabilities } from './capabilities.js';
 export type { SystemPromptContext, SystemPromptProvider } from './system-prompt.js';
 export { applySystemPromptPolicy } from './system-prompt.js';
 export type {
+  HarnessToolDescriptor,
+  MidoAgentHarnessPromptOptions,
+  PromptSection
+} from './prompts/agent-harness.js';
+export {
+  buildMidoAgentHarnessPrompt,
+  renderPromptSections
+} from './prompts/agent-harness.js';
+export { quoteClientPrompt, wrapServerClientPrompts } from './prompts/system-priority.js';
+export type {
   DefaultToolPolicyMode,
   DefaultToolPolicyOptions,
   ToolPolicyAction,
