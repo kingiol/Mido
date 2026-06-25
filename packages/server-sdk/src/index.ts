@@ -15,6 +15,7 @@ export type {
 } from './agents.js';
 export { AgentToolExecutionError, createAgentTool, createAgentWorkflowTool } from './agents.js';
 export type {
+  AgentDelegationOptions,
   AgentRunner,
   CreateAgentRunnerOptions,
   EventSink,
@@ -79,6 +80,15 @@ export {
   buildMidoAgentHarnessPrompt,
   renderPromptSections
 } from './prompts/agent-harness.js';
+export type {
+  AdHocAgentSystemPromptOptions,
+  AgentDelegationPromptOptions
+} from './prompts/agent-delegation.js';
+export {
+  buildAdHocAgentSystemPrompt,
+  buildAgentDelegationPrompt,
+  buildAgentDelegationPromptSection
+} from './prompts/agent-delegation.js';
 export { quoteClientPrompt, wrapServerClientPrompts } from './prompts/system-priority.js';
 export type {
   DefaultToolPolicyMode,

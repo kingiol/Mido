@@ -242,6 +242,90 @@ describe('server agent tools', () => {
     });
   });
 
+  it('auto-registers opt-in delegation agent tools and injects delegation guidance', async () => {
+    const childRunner = createAgentRunner({
+      modelAdapter: new FunctionModelAdapter(() => [
+        { type: 'text-end', textId: 'child-text', text: 'delegated output' },
+        { type: 'done' }
+      ]),
+      sessionStore: new InMemorySessionStore()
+    });
+    let firstParentInput: ModelAdapterRunInput | undefined;
+    const parentRunner = createAgentRunner({
+      modelAdapter: new FunctionModelAdapter(input => {
+        const hasToolResult = input.messages.some(message => message.role === 'tool');
+        if (!hasToolResult) {
+          firstParentInput = input;
+          return [
+            { type: 'tool-call', toolCallId: 'call-research', toolName: 'researchAgent', args: { task: 'Research SDK delegation.' } },
+            { type: 'done' }
+          ];
+        }
+
+        return [{ type: 'done' }];
+      }),
+      sessionStore: new InMemorySessionStore(),
+      delegation: {
+        agents: [
+          {
+            agentId: 'research',
+            name: 'researchAgent',
+            description: 'Delegate focused research tasks to the research agent.',
+            runner: childRunner
+          }
+        ]
+      }
+    });
+
+    expect(parentRunner.listTools()).toEqual([
+      expect.objectContaining({
+        name: 'researchAgent',
+        modelName: 'server__researchAgent',
+        metadata: {
+          mido: {
+            kind: 'agent_tool',
+            agentId: 'research'
+          }
+        }
+      })
+    ]);
+
+    const events = await collect(parentRunner.run(createRunRequest('Use delegation.')));
+    const toolResult = events.find(event => event.type === 'TOOL_RESULT');
+    const systemText = firstParentInput?.messages[0]?.content.find(part => part.type === 'text')?.text ?? '';
+
+    expect(toolResult).toMatchObject({
+      type: 'TOOL_RESULT',
+      toolName: 'researchAgent',
+      output: {
+        agentId: 'research',
+        status: 'completed',
+        outputText: 'delegated output'
+      }
+    });
+    expect(systemText).toContain('# Agent Delegation');
+    expect(systemText).toContain('server__researchAgent');
+    expect(systemText).toContain('Use a single subagent tool for one focused, bounded task');
+  });
+
+  it('does not inject delegation guidance without opt-in delegation tools', async () => {
+    let modelInput: ModelAdapterRunInput | undefined;
+    const runner = createAgentRunner({
+      modelAdapter: new FunctionModelAdapter(input => {
+        modelInput = input;
+        return [{ type: 'done' }];
+      }),
+      sessionStore: new InMemorySessionStore(),
+      systemPrompt: 'Base server prompt.'
+    });
+
+    await collect(runner.run(createRunRequest('No delegation.')));
+    const systemText = modelInput?.messages[0]?.content.find(part => part.type === 'text')?.text ?? '';
+
+    expect(systemText).toContain('Base server prompt.');
+    expect(systemText).not.toContain('# Agent Delegation');
+  });
+
   it('passes isolated child input, storage scope, and trace metadata', async () => {
     const eventStore = new InMemoryEventStore();
     let childInput: ModelAdapterRunInput | undefined;
