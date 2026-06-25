@@ -1,9 +1,16 @@
 import type { ToolDefinition, ToolExecutionPolicy } from '@mido/protocol-core';
 
+export type PromptSectionBodyMode = 'trusted' | 'quoted';
+
 export interface PromptSection {
   id: string;
   title: string;
   body?: string | readonly string[] | null;
+  /**
+   * Use `quoted` when the body comes from user-, client-, memory-, or tool-sourced
+   * text that must not be able to create prompt section boundaries.
+   */
+  bodyMode?: PromptSectionBodyMode;
 }
 
 export interface HarnessToolDescriptor {
@@ -138,7 +145,7 @@ function buildToolInventorySections(
 }
 
 function renderPromptSection(section: PromptSection): string {
-  const body = normalizeSectionBody(section.body);
+  const body = normalizeSectionBody(section.body, section.bodyMode ?? 'trusted');
   if (!body) {
     return '';
   }
@@ -151,6 +158,7 @@ function renderPromptSection(section: PromptSection): string {
 
 function normalizeSectionBody(
   body: PromptSection['body'],
+  bodyMode: PromptSectionBodyMode,
 ): string {
   if (body == null) {
     return '';
@@ -158,10 +166,30 @@ function normalizeSectionBody(
 
   const lines = Array.isArray(body) ? body : [body];
 
+  if (bodyMode === 'trusted') {
+    return lines
+      .map((line) => line.trim())
+      .filter((line) => line.length > 0)
+      .join('\n');
+  }
+
   return lines
+    .flatMap((line) => line.split('\n'))
     .map((line) => line.trim())
     .filter((line) => line.length > 0)
+    .map((line) => quoteSectionBodyLine(line))
     .join('\n');
+}
+
+function quoteSectionBodyLine(line: string): string {
+  return `> ${escapeSectionBodyLine(line)}`;
+}
+
+function escapeSectionBodyLine(line: string): string {
+  return line
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
 }
 
 function normalizeSectionId(id: string): string {

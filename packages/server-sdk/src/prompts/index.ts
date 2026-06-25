@@ -1,7 +1,8 @@
 export type {
   HarnessToolDescriptor,
   MidoAgentHarnessPromptOptions,
-  PromptSection
+  PromptSection,
+  PromptSectionBodyMode
 } from "./agent-harness.js";
 export {
   buildMidoAgentHarnessPrompt,

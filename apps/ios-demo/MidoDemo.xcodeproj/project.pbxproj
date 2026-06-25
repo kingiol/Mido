@@ -16,6 +16,8 @@
 		8A1000010000000000000007 /* DemoAgentStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A1000010000000000000017 /* DemoAgentStore.swift */; };
 		8A1000010000000000000008 /* DemoMockTransport.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A1000010000000000000018 /* DemoMockTransport.swift */; };
 		8A1000010000000000000009 /* TranscriptPresentationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A1000010000000000000019 /* TranscriptPresentationTests.swift */; };
+		8A100001000000000000000A /* Prompts.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A100001000000000000001A /* Prompts.swift */; };
+		8A100001000000000000000B /* DemoPromptsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A100001000000000000001B /* DemoPromptsTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -29,6 +31,8 @@
 		8A1000010000000000000017 /* DemoAgentStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DemoAgentStore.swift; sourceTree = "<group>"; };
 		8A1000010000000000000018 /* DemoMockTransport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DemoMockTransport.swift; sourceTree = "<group>"; };
 		8A1000010000000000000019 /* TranscriptPresentationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranscriptPresentationTests.swift; sourceTree = "<group>"; };
+		8A100001000000000000001A /* Prompts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Prompts.swift; sourceTree = "<group>"; };
+		8A100001000000000000001B /* DemoPromptsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DemoPromptsTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -68,6 +72,7 @@
 				8A1000010000000000000012 /* ContentView.swift */,
 				8A1000010000000000000017 /* DemoAgentStore.swift */,
 				8A1000010000000000000018 /* DemoMockTransport.swift */,
+				8A100001000000000000001A /* Prompts.swift */,
 				8A1000010000000000000013 /* Assets.xcassets */,
 			);
 			path = MidoDemo;
@@ -78,6 +83,7 @@
 			children = (
 				8A1000010000000000000014 /* DemoMockTransportTests.swift */,
 				8A1000010000000000000019 /* TranscriptPresentationTests.swift */,
+				8A100001000000000000001B /* DemoPromptsTests.swift */,
 			);
 			path = MidoDemoTests;
 			sourceTree = "<group>";
@@ -203,6 +209,7 @@
 				8A1000010000000000000002 /* ContentView.swift in Sources */,
 				8A1000010000000000000007 /* DemoAgentStore.swift in Sources */,
 				8A1000010000000000000008 /* DemoMockTransport.swift in Sources */,
+				8A100001000000000000000A /* Prompts.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -212,6 +219,7 @@
 			files = (
 				8A1000010000000000000005 /* DemoMockTransportTests.swift in Sources */,
 				8A1000010000000000000009 /* TranscriptPresentationTests.swift in Sources */,
+				8A100001000000000000000B /* DemoPromptsTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -72,7 +72,8 @@ export { applySystemPromptPolicy } from './system-prompt.js';
 export type {
   HarnessToolDescriptor,
   MidoAgentHarnessPromptOptions,
-  PromptSection
+  PromptSection,
+  PromptSectionBodyMode
 } from './prompts/agent-harness.js';
 export {
   buildMidoAgentHarnessPrompt,
