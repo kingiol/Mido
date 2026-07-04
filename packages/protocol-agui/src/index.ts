@@ -15,6 +15,8 @@ import type {
   ToolResultEvent
 } from '@mido/protocol-core';
 
+export { MIDO_PROTOCOL_VERSION, MIDO_SDK_VERSION } from '@mido/protocol-core';
+
 const CUSTOM_EVENT_PREFIX = 'mido/';
 
 export type AgUiEventType =

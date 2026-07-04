@@ -1,0 +1,174 @@
+name: Publish SDK
+
+on:
+  push:
+    tags:
+      - 'protocol-core-v*'
+      - 'protocol-agui-v*'
+      - 'mcp-core-v*'
+      - 'server-sdk-v*'
+      - 'client-core-v*'
+      - 'client-web-v*'
+      - 'toolkit-core-v*'
+      - 'conformance-v*'
+      - 'evaluator-v*'
+      - 'v*.*.*'
+  workflow_dispatch:
+    inputs:
+      target:
+        description: SDK target to publish
+        required: true
+        type: choice
+        options:
+          - protocol-core
+          - protocol-agui
+          - mcp-core
+          - server-sdk
+          - client-core
+          - client-web
+          - toolkit-core
+          - conformance
+          - evaluator
+          - client-ios
+      version:
+        description: SemVer version that must already be present in source
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  resolve:
+    runs-on: ubuntu-latest
+    outputs:
+      target: ${{ steps.resolve.outputs.target }}
+      version: ${{ steps.resolve.outputs.version }}
+      kind: ${{ steps.resolve.outputs.kind }}
+      package_name: ${{ steps.resolve.outputs.package_name }}
+      package_path: ${{ steps.resolve.outputs.package_path }}
+      tag: ${{ steps.resolve.outputs.tag }}
+      npm_filter: ${{ steps.resolve.outputs.npm_filter }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Resolve release target
+        id: resolve
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            node scripts/release-target.mjs resolve "${{ inputs.target }}" "${{ inputs.version }}"
+          else
+            node scripts/release-target.mjs resolve "${GITHUB_REF_NAME}"
+          fi
+
+  publish-npm:
+    needs: resolve
+    if: needs.resolve.outputs.kind == 'npm'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      id-token: write
+    env:
+      RELEASE_TARGET: ${{ needs.resolve.outputs.target }}
+      RELEASE_VERSION: ${{ needs.resolve.outputs.version }}
+      RELEASE_TAG: ${{ needs.resolve.outputs.tag }}
+      PACKAGE_NAME: ${{ needs.resolve.outputs.package_name }}
+      NPM_FILTER: ${{ needs.resolve.outputs.npm_filter }}
+      DRY_RUN: ${{ github.event_name != 'push' }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org
+          cache: pnpm
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Verify release target
+        run: node scripts/release-target.mjs verify "${RELEASE_TARGET}" "${RELEASE_VERSION}"
+
+      - name: Run package checks
+        run: pnpm version:check && pnpm lint && pnpm test
+
+      - name: Build target package
+        run: pnpm --filter "${NPM_FILTER}..." build
+
+      - name: Verify release tag exists
+        if: env.DRY_RUN != 'true'
+        run: git rev-parse -q --verify "refs/tags/${RELEASE_TAG}"
+
+      - name: Dry-run package artifact
+        if: env.DRY_RUN == 'true'
+        run: |
+          mkdir -p /tmp/mido-release-pack
+          pnpm --filter "${NPM_FILTER}" pack --pack-destination /tmp/mido-release-pack
+          ls -la /tmp/mido-release-pack
+
+      - name: Publish package to npm
+        if: env.DRY_RUN != 'true'
+        run: pnpm --filter "${NPM_FILTER}" publish --access public --no-git-checks --provenance
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Create GitHub release
+        if: env.DRY_RUN != 'true'
+        run: gh release create "${RELEASE_TAG}" --verify-tag --title "${PACKAGE_NAME} ${RELEASE_VERSION}" --notes "Published ${PACKAGE_NAME} ${RELEASE_VERSION} to npm."
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+  publish-ios:
+    needs: resolve
+    if: needs.resolve.outputs.kind == 'swift'
+    runs-on: macos-latest
+    permissions:
+      contents: write
+    env:
+      RELEASE_TARGET: ${{ needs.resolve.outputs.target }}
+      RELEASE_VERSION: ${{ needs.resolve.outputs.version }}
+      RELEASE_TAG: ${{ needs.resolve.outputs.tag }}
+      PACKAGE_NAME: ${{ needs.resolve.outputs.package_name }}
+      DRY_RUN: ${{ github.event_name != 'push' }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Verify release target
+        run: node scripts/release-target.mjs verify "${RELEASE_TARGET}" "${RELEASE_VERSION}"
+
+      - name: Verify root Swift package
+        run: swift package describe --type json >/dev/null
+
+      - name: Test iOS Swift package
+        run: swift test --package-path packages/client-ios
+
+      - name: Verify release tag exists
+        if: env.DRY_RUN != 'true'
+        run: git rev-parse -q --verify "refs/tags/${RELEASE_TAG}"
+
+      - name: Dry-run Swift release
+        if: env.DRY_RUN == 'true'
+        run: echo "Validated ${PACKAGE_NAME} ${RELEASE_VERSION}; skipping GitHub release creation."
+
+      - name: Create GitHub release
+        if: env.DRY_RUN != 'true'
+        run: gh release create "${RELEASE_TAG}" --verify-tag --title "${PACKAGE_NAME} ${RELEASE_VERSION}" --notes "Swift Package release for ${PACKAGE_NAME} ${RELEASE_VERSION}."
+        env:
+          GH_TOKEN: ${{ github.token }}

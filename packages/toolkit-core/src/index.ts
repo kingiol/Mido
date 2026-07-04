@@ -1,3 +1,5 @@
+export { MIDO_PROTOCOL_VERSION, MIDO_SDK_VERSION } from '@mido/protocol-core';
+
 export type {
   BrowserAutomationAdapter,
   CreateBrowserAutomationToolsOptions,

@@ -63,6 +63,62 @@ Use Mido when your app needs the model to reason on the server while the client 
 └── tests/
 ```
 
+## Versioned installation
+
+Use the same Mido SDK version across server and client packages unless the compatibility matrix says otherwise.
+
+```bash
+pnpm add @mido/server-sdk@0.1.0 @mido/client-core@0.1.0
+pnpm add @mido/client-web@0.1.0
+```
+
+For Swift Package Manager, depend on a repository tag:
+
+```swift
+.package(url: "https://github.com/kingiol/Mido.git", from: "0.1.0")
+```
+
+Use `main` only for local development or testing unreleased changes.
+
+| Mido SDK | Protocol | Server SDK | Web Client | iOS Client |
+| --- | --- | --- | --- | --- |
+| `0.1.x` | `mido.protocol.v1` | `0.1.x` | `0.1.x` | `0.1.x` |
+
+## Publishing SDKs
+
+SDK publishing is tag-driven through GitHub Actions. Keep the source version in sync first:
+
+```bash
+pnpm version:set 0.2.0
+pnpm release:check
+git commit -am "chore: release SDK 0.2.0"
+git push origin main
+```
+
+Then push one tag for the SDK you want to publish:
+
+| Tag | Publishes |
+| --- | --- |
+| `protocol-core-v0.2.0` | `@mido/protocol-core` to npm |
+| `protocol-agui-v0.2.0` | `@mido/protocol-agui` to npm |
+| `mcp-core-v0.2.0` | `@mido/mcp-core` to npm |
+| `server-sdk-v0.2.0` | `@mido/server-sdk` to npm |
+| `client-core-v0.2.0` | `@mido/client-core` to npm |
+| `client-web-v0.2.0` | `@mido/client-web` to npm |
+| `toolkit-core-v0.2.0` | `@mido/toolkit-core` to npm |
+| `conformance-v0.2.0` | `@mido/conformance` to npm |
+| `evaluator-v0.2.0` | `@mido/evaluator` to npm |
+| `v0.2.0` | `MidoClient` Swift Package GitHub release |
+
+Example:
+
+```bash
+git tag server-sdk-v0.2.0
+git push origin server-sdk-v0.2.0
+```
+
+npm publishing requires the repository `NPM_TOKEN` secret unless npm trusted publishing is configured. The publish workflow uses npm provenance and creates a GitHub release for the pushed tag. The iOS SDK intentionally uses `v<semver>` tags because Swift Package Manager resolves package versions from SemVer-compatible Git tags.
+
 ## Core design
 
 - The agent loop always runs on the server.
@@ -256,8 +312,10 @@ The iOS client SDK lives in `packages/client-ios` and is distributed as a Swift 
 
 ```swift
 // Package.swift
-.package(url: "https://github.com/kingiol/Mido.git", branch: "main")
+.package(url: "https://github.com/kingiol/Mido.git", from: "0.1.0")
 ```
+
+For unreleased development builds, use `branch: "main"` only when you intentionally want the latest repository state instead of a tagged SDK release.
 
 Then add the `MidoClient` product to your app target. The first iOS SDK pass includes Swift 6 Codable protocol models, an `AgentClient` actor, local `client_auto` and `client_interactive` tool handling, and a `URLSessionSSETransport` for the same `SSE down + POST up` contract used by the web client. The agent loop still runs on the server.
 

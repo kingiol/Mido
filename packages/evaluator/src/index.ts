@@ -1,3 +1,5 @@
+export { MIDO_PROTOCOL_VERSION, MIDO_SDK_VERSION } from '@mido/protocol-core';
+
 export * from './types.js';
 export * from './metrics.js';
 export * from './artifact.js';

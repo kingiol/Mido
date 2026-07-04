@@ -28,7 +28,11 @@
     "demo:client": "vite --config apps/web-demo/vite.config.ts",
     "demo:build": "vite build --config apps/web-demo/vite.config.ts",
     "eval:smoke": "tsx packages/evaluator/src/cli.ts docs/evals/harness-smoke.jsonl docs/evals/harness-safety.jsonl",
-    "eval:store": "tsx packages/evaluator/src/cli-store.ts"
+    "eval:store": "tsx packages/evaluator/src/cli-store.ts",
+    "version:set": "node scripts/versioning.mjs set",
+    "version:check": "node scripts/versioning.mjs check",
+    "release:target": "node scripts/release-target.mjs",
+    "release:check": "pnpm version:check && pnpm lint && pnpm test && pnpm build && swift package describe --type json >/dev/null && swift test --package-path packages/client-ios"
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^6.0.2",

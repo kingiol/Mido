@@ -1,5 +1,7 @@
 import {
   createId,
+  MIDO_PROTOCOL_VERSION,
+  MIDO_SDK_VERSION,
   nowIso,
   normalizeToolDefinition,
   stableStringify,
@@ -17,6 +19,8 @@ import {
   type ToolResultEnvelope,
   validateSchema
 } from '@mido/protocol-core';
+
+export { MIDO_PROTOCOL_VERSION, MIDO_SDK_VERSION };
 
 export interface AgentTransport {
   startRun(request: RunStartRequest, options?: AgentTransportRequestOptions): Promise<AsyncIterable<CoreEvent>> | AsyncIterable<CoreEvent>;

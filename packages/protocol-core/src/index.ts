@@ -1,5 +1,7 @@
 import { Ajv, type ErrorObject, type ValidateFunction } from 'ajv';
 
+export { MIDO_PROTOCOL_VERSION, MIDO_SDK_VERSION } from './version.js';
+
 export type JsonPrimitive = string | number | boolean | null;
 export type JsonValue = JsonPrimitive | JsonValue[] | { [key: string]: JsonValue };
 export type JsonObject = { [key: string]: JsonValue };

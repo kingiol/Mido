@@ -1,6 +1,8 @@
 import { fromAgUiEvent, toAgUiEvent } from '@mido/protocol-agui';
 import { coreProtocolSchemas, type CoreEvent } from '@mido/protocol-core';
 
+export { MIDO_PROTOCOL_VERSION, MIDO_SDK_VERSION } from '@mido/protocol-core';
+
 export interface ConformanceScenario {
   id: string;
   description: string;

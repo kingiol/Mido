@@ -4,6 +4,7 @@ import { createAgentClient, type AgentClient, type AgentTransport, type ClearCon
 import type { ToolCallSnapshot } from '@mido/client-core';
 import type { CoreEvent, RunCancelRequest, RunResumeRequest, RunStartRequest } from '@mido/protocol-core';
 
+export { MIDO_PROTOCOL_VERSION, MIDO_SDK_VERSION } from '@mido/client-core';
 export type {
   AgentClient,
   AgentTransport,
