@@ -67,7 +67,7 @@ function wrapSystemPrompt(
     return serverPrompt;
   }
 
-  return wrapServerClientPrompts(serverPrompt, quoteClientPrompt(clientSystemPrompt)) + "\n\n";
+  return wrapServerClientPrompts(serverPrompt, quoteClientPrompt(clientSystemPrompt));
 }
 
 function extractClientSystemPrompt(messages: AgentMessage[]): string {

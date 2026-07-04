@@ -22,7 +22,7 @@ Use Mido when your app needs the model to reason on the server while the client 
 - `@mido/mcp-core`
   Managed MCP connections, health checks, tool refresh diffs, and mapping helpers for server or client runtimes.
 - `@mido/server-sdk`
-  Server-owned agent loop, tool routing, suspend/resume flow, `SessionStore`, durable thread/event stores, tracing, and provider adapters including DeepSeek.
+  Server-owned agent loop, tool routing, suspend/resume flow, `SessionStore`, durable thread/event stores, tracing, user memory system with autonomous write, and provider adapters including DeepSeek.
 - `@mido/client-core`
   Transport-agnostic client runtime with local tool registry, pending interactive tool state, and automatic resume for `client_auto` tools.
 - `@mido/client-web`
@@ -131,6 +131,7 @@ npm publishing requires the repository `NPM_TOKEN` secret unless npm trusted pub
 - Server-owned system prompts can be configured with `createAgentRunner({ systemPrompt })` and updated with `runner.setSystemPrompt(...)`. Static strings and context-aware provider functions are supported. When set, client-provided `system` messages are treated as untrusted supplemental preferences and wrapped under the server prompt instead of being passed through as peer instructions.
 - Server-side multi-agent orchestration is supported through `createAgentTool(...)`. A child `AgentRunner` can be wrapped as a normal `server` tool so the root runner keeps ownership of the user-facing conversation while specialists use their own prompts, tools, policies, and stores.
 - Agent Skills are supported as instruction/resource packages. Mido indexes `SKILL.md` frontmatter, progressively loads selected instructions, supports `references/` and `assets/`, emits audit events, and can run `scripts/` only when an explicit sandbox is configured.
+- User Memory persists user facts, preferences, and episode summaries across sessions. `UserMemoryStore` contracts support deterministic text retrieval, content-hash deduplication, and scoped per-user isolation. An autonomous write pipeline extracts candidates from user statements and tool results, evaluates them against policy, and writes or supersedes memories automatically. Memory context is injected into the server system prompt at run start through the existing provider mechanism.
 - Tool policy is opt-in. Existing runners behave the same unless `createAgentRunner({ toolPolicy })` is configured. Tools can add lightweight `metadata.policy` hints such as `risk`, `effects`, and `scopes`; `createDefaultToolPolicy()` hides and blocks destructive non-interactive tools while keeping `client_interactive` tools available for the existing approval flow.
 - The internal protocol stays provider-neutral.
 - AG-UI stays an adapter layer, not the internal source of truth.
@@ -254,6 +255,7 @@ Server Agent Runner
 See [Docs](./docs/README.md) for the full documentation map and [Roadmap](./docs/roadmap.md) for current priorities.
 See [Architecture](./docs/architecture.md) for the package boundaries and [Data Flow](./docs/data-flow.md) for the annotated sequence diagrams.
 See [Storage and Tracing](./docs/storage-and-tracing.md) for filesystem persistence, storage interfaces, and run inspector traces.
+See [User Memory](./docs/plans/user-memory-design.md) for the cross-session memory design, autonomous write pipeline, and integration architecture.
 See [Evaluation](./docs/evaluation.md) for metrics, reproducible run artifacts, and no-key local smoke/safety evals.
 
 Run local evaluator checks with:

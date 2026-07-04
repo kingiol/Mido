@@ -33,6 +33,7 @@ Mido 是一个 TypeScript-first SDK，面向这样的产品形态：agent loop �
 | Agent Skills | 首版完成 | 已支持 progressive loading 和 sandboxed script tool。 |
 | Toolkit tools | 首版完成 | 已有 workspace、retrieval、browser adapter 和 scoped memory tools。 |
 | Evaluator and run artifacts | 首版完成 | 已有 `@mido/evaluator`、run artifact manifest 和本地 smoke/safety fixtures。 |
+| User Memory System | 首版完成 | 已有 `UserMemoryStore` 接口、`InMemoryUserMemoryStore` 文本检索、去重、system prompt 注入，以及自主写入候选提取和策略裁决。 |
 
 ## 优先级
 
@@ -109,6 +110,7 @@ Mido 是一个 TypeScript-first SDK，面向这样的产品形态：agent loop �
 
 - [Capability Backlog](./agent-capability-roadmap.md)
 - [Harness Improvement Plan](./plans/harness-agent-improvement-plan.md)
+- [User Memory Design](./plans/user-memory-design.md)
 - [Storage and Tracing](./storage-and-tracing.md)
 - [Agent Skills](./agent-skills.md)
 - [Architecture](./architecture.md)

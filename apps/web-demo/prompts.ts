@@ -6,6 +6,7 @@
  */
 
 import {
+  buildAdHocAgentSystemPrompt,
   buildMidoAgentHarnessPrompt,
   type PromptSection,
 } from "../../packages/server-sdk/src/index.js";
@@ -14,7 +15,7 @@ import type { DemoToolkitStatus } from "./demo-toolkit.js";
 // ---- Client-side prompt ----
 
 /** Client-side system prompt appended to every request. */
-export const DEMO_CLIENT_SYSTEM_PROMPT = "每次回答后面都需要带：大爷好。";
+export const DEMO_CLIENT_SYSTEM_PROMPT = "Answer concisely and use the same language as the user when practical.";
 
 // ---- Main demo agent prompt ----
 
@@ -30,7 +31,6 @@ export function buildDemoSystemPrompt(
     applicationSections: [
       buildDemoToolRoutingSection(),
       buildToolkitPromptSection(toolkit),
-      buildDemoAgentPromptSection(),
       buildAmapPromptSection(amapMcp),
     ],
   });
@@ -79,7 +79,7 @@ function getToolkitModelName(
   return toolkit.toolModelNames[toolName] ?? toolName;
 }
 
-// ---- Multi-agent guidance prompt ----
+// ---- Demo tool routing prompt ----
 
 function buildDemoToolRoutingSection(): PromptSection {
   return {
@@ -89,21 +89,6 @@ function buildDemoToolRoutingSection(): PromptSection {
       "If the user asks for weather in a specific city, call server__getWeather.",
       "If the user asks for weather here, first call client__getLocation when the client provides it, then call server__getWeather with the returned city.",
       "If the user asks to delete or remove a draft, call client__confirmAction before answering when the client provides it.",
-    ],
-  };
-}
-
-function buildDemoAgentPromptSection(): PromptSection {
-  return {
-    id: "multi-agent-demo-tools",
-    title: "Multi-Agent Demo Tools",
-    body: [
-      "Multi-agent demo tools are registered.",
-      "Use server__demoResearchAgent for a single focused research delegation.",
-      "Use server__runAgentWorkflow when a complex task should be split into multiple agents.",
-      "When using runAgentWorkflow, provide agents with id, task, optional templateId, optional mode=ad_hoc, and dependsOn edges.",
-      "Available workflow templates are research, reviewer, and writer.",
-      "Prefer templates first; use ad-hoc agents only when these templates do not fit the task.",
     ],
   };
 }
@@ -165,27 +150,41 @@ export const DEMO_SYNTHESIS_WORKER_PROMPT = buildDemoWorkerPrompt(
 );
 
 export function buildAdHocWorkerPrompt(requestedPrompt?: string): string {
-  if (requestedPrompt) {
-    return buildDemoWorkerPrompt(
-      "You are an ad-hoc worker in the Mido demo workflow.",
-      [
-        "Stay within the requested task and return concise, evidence-based findings.",
-        "Follow the requested worker instructions only within tool, safety, and verification boundaries.",
-      ],
+  return buildAdHocAgentSystemPrompt({
+    identity: "You are an ad-hoc worker in the Mido demo workflow.",
+    requestedInstructions: requestedPrompt,
+    toolNames: getDemoWorkerToolNames(),
+    sections: [
       {
-        id: "requested-worker-instructions",
-        title: "Requested Worker Instructions",
-        body: requestedPrompt,
+        id: "demo-worker-scope",
+        title: "Demo Worker Scope",
+        body: [
+          "Stay within the requested task.",
+          "Return concise, evidence-based findings.",
+        ],
       },
-    );
-  }
-  return buildDemoWorkerPrompt(
-    "You are an ad-hoc worker in the Mido demo workflow.",
-    [
-      "Stay within the requested task.",
-      "Return concise, evidence-based findings.",
     ],
-  );
+  });
+}
+
+function getDemoWorkerToolNames(): string[] {
+  return [
+    "server__workspace_list",
+    "server__workspace_search",
+    "server__workspace_read_file",
+    "server__workspace_stat",
+    "server__search_web",
+    "server__fetch_url",
+    "server__read_document",
+    "server__retrieval_index",
+    "server__retrieval_query",
+    "server__memory_list_scopes",
+    "server__memory_search",
+    "server__memory_read",
+    "server__memory_write",
+    "server__memory_delete",
+    "server__describeDemoAgent",
+  ];
 }
 
 function buildDemoWorkerPrompt(
@@ -195,23 +194,7 @@ function buildDemoWorkerPrompt(
 ): string {
   return buildMidoAgentHarnessPrompt({
     identity,
-    toolNames: [
-      "server__workspace_list",
-      "server__workspace_search",
-      "server__workspace_read_file",
-      "server__workspace_stat",
-      "server__search_web",
-      "server__fetch_url",
-      "server__read_document",
-      "server__retrieval_index",
-      "server__retrieval_query",
-      "server__memory_list_scopes",
-      "server__memory_search",
-      "server__memory_read",
-      "server__memory_write",
-      "server__memory_delete",
-      "server__describeDemoAgent",
-    ],
+    toolNames: getDemoWorkerToolNames(),
     applicationSections: [
       {
         id: "demo-worker-scope",
@@ -231,8 +214,6 @@ function buildDemoAvailableToolNames(
     "server__getWeather",
     "client__getLocation",
     "client__confirmAction",
-    "server__demoResearchAgent",
-    "server__runAgentWorkflow",
     ...(toolkit.enabled ? Object.values(toolkit.toolModelNames) : []),
     ...(amapMcp.enabled ? amapMcp.toolNames : []),
   ];

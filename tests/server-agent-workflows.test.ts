@@ -152,6 +152,98 @@ describe('server agent workflows', () => {
     });
   });
 
+  it('auto-registers opt-in workflow tools, metadata, and delegation prompt guidance', async () => {
+    const childInputs = new Map<string, ModelAdapterRunInput>();
+    let firstParentInput: ModelAdapterRunInput | undefined;
+    const parentRunner = createAgentRunner({
+      modelAdapter: new FunctionModelAdapter(input => {
+        const hasToolResult = input.messages.some(message => message.role === 'tool');
+        if (!hasToolResult) {
+          firstParentInput = input;
+          return [
+            {
+              type: 'tool-call',
+              toolCallId: 'call-workflow',
+              toolName: 'runAgentWorkflow',
+              args: {
+                agents: [
+                  { id: 'repo', templateId: 'research', task: 'Inspect server SDK.', dependsOn: [] },
+                  { id: 'review', templateId: 'reviewer', task: 'Review findings.', dependsOn: ['repo'] }
+                ]
+              }
+            },
+            { type: 'done' }
+          ];
+        }
+
+        return [{ type: 'done' }];
+      }),
+      sessionStore: new InMemorySessionStore(),
+      delegation: {
+        workflow: {
+          name: 'runAgentWorkflow',
+          description: 'Create and coordinate multiple agents.',
+          templates: {
+            research: {
+              description: 'Research specialist.',
+              createRunner: request => createChildRunner(request.agent.id, childInputs)
+            },
+            reviewer: {
+              description: 'Review specialist.',
+              createRunner: request => createChildRunner(request.agent.id, childInputs)
+            }
+          },
+          limits: {
+            maxAgents: 4,
+            maxParallelAgents: 2
+          }
+        }
+      }
+    });
+
+    expect(parentRunner.listTools()).toEqual([
+      expect.objectContaining({
+        name: 'runAgentWorkflow',
+        modelName: 'server__runAgentWorkflow',
+        metadata: {
+          mido: {
+            kind: 'agent_workflow_tool',
+            workflow: {
+              templates: [
+                { id: 'research', description: 'Research specialist.' },
+                { id: 'reviewer', description: 'Review specialist.' }
+              ],
+              allowAdHocAgents: false,
+              limits: expect.objectContaining({
+                maxAgents: 4,
+                maxParallelAgents: 2,
+                maxModelCallsPerAgent: 4,
+                timeoutMs: 120_000
+              })
+            }
+          }
+        }
+      })
+    ]);
+
+    const events = await collect(parentRunner.run(createRunRequest('Coordinate workers.')));
+    const output = getWorkflowOutput(events);
+    const systemText = firstParentInput?.messages[0]?.content.find(part => part.type === 'text')?.text ?? '';
+
+    expect(output).toMatchObject({
+      status: 'completed',
+      agents: [
+        { id: 'repo', templateId: 'research', mode: 'template', status: 'completed' },
+        { id: 'review', templateId: 'reviewer', mode: 'template', status: 'completed' }
+      ]
+    });
+    expect(readFirstText(childInputs.get('review'))).toContain('- repo: output:repo');
+    expect(systemText).toContain('# Agent Delegation');
+    expect(systemText).toContain('server__runAgentWorkflow');
+    expect(systemText).toContain('research — Research specialist.');
+    expect(systemText).toContain('Ad-hoc agents: not allowed.');
+  });
+
   it('rejects invalid dependency graphs before starting child agents', async () => {
     const parentRunner = createWorkflowParentRunner({
       agents: [

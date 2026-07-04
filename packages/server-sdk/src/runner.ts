@@ -51,6 +51,7 @@ import {
   type ThreadStore
 } from './store.js';
 import { applySystemPromptPolicy, type SystemPromptContext, type SystemPromptProvider } from './system-prompt.js';
+import { buildAgentDelegationPrompt, type AgentDelegationPromptOptions } from './prompts/agent-delegation.js';
 import { ToolRegistry, type RegisteredToolDefinition } from './tool-registry.js';
 import { checkModelAdapterCapabilities, type ModelAdapterCapabilities } from './capabilities.js';
 import { buildUserMemoryContext, type UserMemoryStore } from './user-memory.js';
@@ -70,7 +71,13 @@ import {
 } from './summary-compressor.js';
 import { selectSummaryWindowMessages } from './summary-messages.js';
 import { extractSummaryToolFacts } from './summary-tool-facts.js';
-import { AgentToolExecutionError } from './agents.js';
+import {
+  AgentToolExecutionError,
+  createAgentTool,
+  createAgentWorkflowTool,
+  type AgentToolOptions,
+  type CreateAgentWorkflowToolOptions
+} from './agents.js';
 
 export interface ToolExecutionContext {
   runId: string;
@@ -123,6 +130,12 @@ export interface ModelAdapter {
   run(input: ModelAdapterRunInput): Promise<AsyncIterable<ModelAdapterEvent>> | AsyncIterable<ModelAdapterEvent>;
 }
 
+export interface AgentDelegationOptions {
+  agents?: readonly AgentToolOptions[];
+  workflow?: CreateAgentWorkflowToolOptions;
+  prompt?: AgentDelegationPromptOptions | false;
+}
+
 export interface CreateAgentRunnerOptions {
   modelAdapter: ModelAdapter;
   summaryCompressor?: ModelAdapter;
@@ -132,6 +145,7 @@ export interface CreateAgentRunnerOptions {
   eventSink?: EventSink;
   exposeReasoningEvents?: boolean;
   systemPrompt?: SystemPromptProvider;
+  delegation?: AgentDelegationOptions;
   toolPolicy?: ToolPolicyProvider;
   skillRegistry?: AgentSkillRegistry;
   userMemoryStore?: UserMemoryStore;
@@ -206,16 +220,20 @@ export function createAgentRunner(options: CreateAgentRunnerOptions): AgentRunne
   const activeRuns = new Map<string, { controller: AbortController; reason?: string }>();
   let systemPrompt = options.systemPrompt;
 
-  return {
-    registerTool(definition) {
-      if (definition.executionPolicy === 'server' && typeof definition.execute !== 'function') {
-        throw new Error(`Server tool "${definition.name}" must provide an execute handler`);
-      }
+  const registerRuntimeTool = (definition: ServerToolRuntimeDefinition): RegisteredServerToolRuntimeDefinition => {
+    if (definition.executionPolicy === 'server' && typeof definition.execute !== 'function') {
+      throw new Error(`Server tool "${definition.name}" must provide an execute handler`);
+    }
 
-      const registered = registry.register(definition) as RegisteredServerToolRuntimeDefinition;
-      runtimeDefinitions.set(registered.toolId, registered);
-      return registered;
-    },
+    const registered = registry.register(definition) as RegisteredServerToolRuntimeDefinition;
+    runtimeDefinitions.set(registered.toolId, registered);
+    return registered;
+  };
+
+  registerAgentDelegationTools(options.delegation, registerRuntimeTool);
+
+  return {
+    registerTool: registerRuntimeTool,
 
     listTools() {
       return registry.list();
@@ -292,7 +310,7 @@ export function createAgentRunner(options: CreateAgentRunnerOptions): AgentRunne
           request,
           tools
         },
-        composeSystemPromptProvider(systemPrompt, options.skillRegistry, memoryPrompt)
+        composeSystemPromptProvider(systemPrompt, options.skillRegistry, memoryPrompt, options.delegation)
       );
       const context: RunContext = {
         runId,
@@ -2269,19 +2287,52 @@ function getRunTools(registry: ToolRegistry, clientTools: RegisteredClientToolDe
   ];
 }
 
+function registerAgentDelegationTools(
+  delegation: AgentDelegationOptions | undefined,
+  registerTool: (definition: ServerToolRuntimeDefinition) => RegisteredServerToolRuntimeDefinition
+): void {
+  for (const agent of delegation?.agents ?? []) {
+    registerTool(createAgentTool(agent));
+  }
+
+  if (delegation?.workflow) {
+    registerTool(createAgentWorkflowTool(delegation.workflow));
+  }
+}
+
+function shouldIncludeAgentDelegationPrompt(delegation: AgentDelegationOptions | undefined): boolean {
+  return hasAgentDelegationTools(delegation) && delegation?.prompt !== false;
+}
+
+function hasAgentDelegationTools(delegation: AgentDelegationOptions | undefined): boolean {
+  return Boolean((delegation?.agents?.length ?? 0) > 0 || delegation?.workflow);
+}
+
+function normalizeAgentDelegationPromptOptions(
+  delegation: AgentDelegationOptions | undefined
+): AgentDelegationPromptOptions {
+  if (delegation?.prompt === false) {
+    return { enabled: false };
+  }
+
+  return delegation?.prompt ?? {};
+}
+
 function composeSystemPromptProvider(
   baseProvider: SystemPromptProvider | undefined,
   skillRegistry: AgentSkillRegistry | undefined,
-  memoryPrompt?: string
+  memoryPrompt?: string,
+  delegation?: AgentDelegationOptions
 ): SystemPromptProvider | undefined {
-  if (!baseProvider && !skillRegistry && !memoryPrompt) {
+  if (!baseProvider && !skillRegistry && !memoryPrompt && !shouldIncludeAgentDelegationPrompt(delegation)) {
     return undefined;
   }
 
   return async (context: SystemPromptContext) => {
     const basePrompt = typeof baseProvider === 'function' ? await baseProvider(context) : baseProvider;
+    const delegationPrompt = buildAgentDelegationPrompt(context.tools, normalizeAgentDelegationPromptOptions(delegation));
     const skillPrompt = await skillRegistry?.buildSystemPrompt(context);
-    return [basePrompt, skillPrompt, memoryPrompt].map(part => part?.trim()).filter(Boolean).join('\n\n');
+    return [basePrompt, delegationPrompt, skillPrompt, memoryPrompt].map(part => part?.trim()).filter(Boolean).join('\n\n');
   };
 }
 

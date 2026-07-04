@@ -333,7 +333,15 @@ export function createAgentWorkflowTool(options: CreateAgentWorkflowToolOptions)
       ...(options.metadata ?? {}),
       mido: {
         ...(isJsonObject(options.metadata?.mido) ? options.metadata.mido : {}),
-        kind: 'agent_workflow_tool'
+        kind: 'agent_workflow_tool',
+        workflow: {
+          templates: Object.entries(options.templates).map(([id, template]) => ({
+            id,
+            description: template.description
+          })),
+          allowAdHocAgents: options.allowAdHocAgents === true,
+          limits
+        }
       }
     },
     async execute(args, context) {

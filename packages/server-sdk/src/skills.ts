@@ -336,7 +336,7 @@ export async function createAgentSkillRegistry(options: CreateAgentSkillRegistry
           continue;
         }
 
-        const section = `## ${selection.skill.name}\n${loaded.instructions}`;
+        const section = buildSkillPromptSection(selection.skill, loaded.instructions, remainingBytes);
         const fittingSection = truncateToBytes(section, remainingBytes);
         if (!fittingSection) {
           continue;
@@ -922,6 +922,29 @@ async function loadSkillInstructions(
     instructions,
     truncated: byteLength(body) > byteLength(instructions)
   };
+}
+
+function buildSkillPromptSection(skill: AgentSkillManifest, instructions: string, maxBytes: number): string {
+  const standardSection = `## ${skill.name}\n${instructions}`;
+  if (byteLength(standardSection) <= maxBytes) {
+    return standardSection;
+  }
+
+  const compactSection = `${skill.name}\n${compactSkillInstructions(instructions)}`;
+  if (byteLength(compactSection) <= maxBytes) {
+    return compactSection;
+  }
+
+  return truncateToBytes(compactSection, maxBytes);
+}
+
+function compactSkillInstructions(instructions: string): string {
+  const lines = instructions
+    .split('\n')
+    .map(line => line.trim())
+    .filter(line => line.length > 0 && !line.startsWith('#'));
+
+  return lines.join('\n');
 }
 
 function selectSkills(skills: AgentSkillManifest[], context: SystemPromptContext, maxLoadedSkills: number): AgentSkillSelection[] {

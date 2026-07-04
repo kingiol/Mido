@@ -12,12 +12,11 @@ import {
   FileSystemEventStore,
   FileSystemThreadStore,
   InMemorySessionStore,
-  createAgentTool,
   createAgentRunner,
-  createAgentWorkflowTool,
   createAgentSkillRegistry,
   createDeepSeekModelAdapter,
   registerManagedMcpHttpServerTools,
+  type AgentDelegationOptions,
   type AgentRunner,
   type AgentSkillManifest,
 } from "../../packages/server-sdk/src/index.js";
@@ -124,11 +123,11 @@ const runner = createAgentRunner({
   exposeReasoningEvents,
   systemPrompt: () => buildDemoSystemPrompt(amapMcp, demoToolkit),
   skillRegistry,
+  delegation: createDemoAgentDelegation(),
 });
 
 runner.registerTool(weatherTool);
 demoToolkit = registerDemoToolkitTools(runner, { projectRoot });
-registerDemoAgentTools(runner);
 
 amapMcp = await registerAmapMcpTools(runner);
 
@@ -320,30 +319,27 @@ async function registerAmapMcpTools(
   }
 }
 
-function registerDemoAgentTools(
-  runner: Pick<AgentRunner, "registerTool">,
-): void {
-  // 这里注册的是“固定专家 agent”示例：主 agent 只有在判断需要专项研究时，才会调用 demoResearchAgent。
-  // 子 agent 使用独立 runner 和独立工具注册，不会自动继承主 runner 的全部工具，避免把 MCP、workflow 等高权限能力递归暴露给子 agent。
-  runner.registerTool(
-    createAgentTool({
-      agentId: "demo_research",
-      name: "demoResearchAgent",
-      description:
-        "Delegate focused repository, documentation, or research tasks to a read-only demo research agent.",
-      runner: createDemoSpecialistRunner(
-        "demo_research",
-        DEMO_RESEARCH_SPECIALIST_PROMPT,
-      ),
-      // maxModelCalls: 3,
-      timeoutMs: 90_000,
-    }),
-  );
-
-  // 这里注册的是“动态多 agent workflow”示例：主 agent 可以一次性声明多个 worker agents，
-  // 并用 dependsOn 控制它们是并发执行、串行执行，还是组成一个小型 DAG。
-  runner.registerTool(
-    createAgentWorkflowTool({
+function createDemoAgentDelegation(): AgentDelegationOptions {
+  return {
+    // 这里配置的是“固定专家 agent”示例：主 agent 只有在判断需要专项研究时，才会调用 demoResearchAgent。
+    // 子 agent 使用独立 runner 和独立工具注册，不会自动继承主 runner 的全部工具，避免把 MCP、workflow 等高权限能力递归暴露给子 agent。
+    agents: [
+      {
+        agentId: "demo_research",
+        name: "demoResearchAgent",
+        description:
+          "Delegate focused repository, documentation, or research tasks to a read-only demo research agent.",
+        runner: createDemoSpecialistRunner(
+          "demo_research",
+          DEMO_RESEARCH_SPECIALIST_PROMPT,
+        ),
+        // maxModelCalls: 3,
+        timeoutMs: 90_000,
+      },
+    ],
+    // 这里配置的是“动态多 agent workflow”示例：主 agent 可以一次性声明多个 worker agents，
+    // 并用 dependsOn 控制它们是并发执行、串行执行，还是组成一个小型 DAG。
+    workflow: {
       name: "runAgentWorkflow",
       description:
         "Create and coordinate multiple demo agents for complex tasks. Use dependsOn to control serial, parallel, or DAG execution.",
@@ -391,8 +387,8 @@ function registerDemoAgentTools(
         // maxModelCallsPerAgent: 3,
         timeoutMs: 120_000,
       },
-    }),
-  );
+    },
+  };
 }
 
 function createDemoSpecialistRunner(
