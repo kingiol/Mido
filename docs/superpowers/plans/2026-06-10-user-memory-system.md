@@ -4,9 +4,9 @@
 
 **Goal:** Build the first usable server-side user memory vertical slice for Mido.
 
-**Architecture:** Add a `UserMemoryStore` contract and `InMemoryUserMemoryStore` in `@mido/server-sdk`, with deterministic text search and content-hash deduplication. Integrate retrieval into `createAgentRunner()` by composing a memory block into the existing server-owned system prompt at run start; leave Redis, embedding providers, and post-run extraction for later phases.
+**Architecture:** Add a `UserMemoryStore` contract and `InMemoryUserMemoryStore` in `@mido-agent/server-sdk`, with deterministic text search and content-hash deduplication. Integrate retrieval into `createAgentRunner()` by composing a memory block into the existing server-owned system prompt at run start; leave Redis, embedding providers, and post-run extraction for later phases.
 
-**Tech Stack:** TypeScript, Vitest, pnpm workspaces, `@mido/protocol-core`, `@mido/server-sdk`.
+**Tech Stack:** TypeScript, Vitest, pnpm workspaces, `@mido-agent/protocol-core`, `@mido-agent/server-sdk`.
 
 ---
 
@@ -142,7 +142,7 @@ Run:
 ```bash
 pnpm exec vitest run tests/server-user-memory.test.ts tests/server-sdk.test.ts
 pnpm lint
-pnpm --filter @mido/server-sdk build
+pnpm --filter @mido-agent/server-sdk build
 ```
 
 Expected: all commands exit 0.

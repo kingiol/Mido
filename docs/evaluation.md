@@ -6,7 +6,7 @@ specific harnesses.
 
 ## Package
 
-`@mido/evaluator` exports:
+`@mido-agent/evaluator` exports:
 
 - `calculateRunMetrics(events)` for run-level efficiency, cost, robustness, and
   safety metrics.
@@ -16,7 +16,7 @@ specific harnesses.
 - `gradeEvalCase(...)` and `runEvalSuite(...)` for deterministic local evals.
 
 The metrics implementation reuses `buildRunTrace(events)` from
-`@mido/protocol-core`, so evaluator behavior stays aligned with the core run
+`@mido-agent/protocol-core`, so evaluator behavior stays aligned with the core run
 inspector trace shape.
 
 ## Run artifacts

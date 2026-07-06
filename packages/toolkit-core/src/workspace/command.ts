@@ -1,6 +1,6 @@
 import { spawn } from 'node:child_process';
 
-import type { JsonObject, JsonValue } from '@mido/protocol-core';
+import type { JsonObject, JsonValue } from '@mido-agent/protocol-core';
 
 import { createTool } from '../tool.js';
 import type { CreateWorkspaceToolsOptions, ToolkitToolDefinition } from '../types.js';

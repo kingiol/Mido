@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto';
 
-import { buildRunTrace, stableStringify, type AgentMessage, type ToolDefinition } from '@mido/protocol-core';
+import { buildRunTrace, stableStringify, type AgentMessage, type ToolDefinition } from '@mido-agent/protocol-core';
 
 import { calculateRunMetrics } from './metrics.js';
 import type { BuildRunArtifactInput, EvalRunArtifact } from './types.js';

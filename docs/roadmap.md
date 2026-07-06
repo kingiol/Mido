@@ -21,7 +21,7 @@ Mido 是一个 TypeScript-first SDK，面向这样的产品形态：agent loop �
 
 | 领域 | 状态 | 说明 |
 | --- | --- | --- |
-| Server-owned agent loop | 已完成 | 已在 `@mido/server-sdk` 中实现。 |
+| Server-owned agent loop | 已完成 | 已在 `@mido-agent/server-sdk` 中实现。 |
 | Client tool execution | 已完成 | 已支持 `server`、`client_auto` 和 `client_interactive`。 |
 | Checkpoint/resume | 已完成 | Client tools 会暂停 run，并通过 `RunResumeRequest` 恢复。 |
 | Run cancel and demo retry | 首版完成 | Tool-level retry 和 reconnect recovery 仍需补齐。 |
@@ -32,7 +32,7 @@ Mido 是一个 TypeScript-first SDK，面向这样的产品形态：agent loop �
 | Managed MCP lifecycle | 首版完成 | Managed connection helpers 和 refresh diffs 已存在。 |
 | Agent Skills | 首版完成 | 已支持 progressive loading 和 sandboxed script tool。 |
 | Toolkit tools | 首版完成 | 已有 workspace、retrieval、browser adapter 和 scoped memory tools。 |
-| Evaluator and run artifacts | 首版完成 | 已有 `@mido/evaluator`、run artifact manifest 和本地 smoke/safety fixtures。 |
+| Evaluator and run artifacts | 首版完成 | 已有 `@mido-agent/evaluator`、run artifact manifest 和本地 smoke/safety fixtures。 |
 | User Memory System | 首版完成 | 已有 `UserMemoryStore` 接口、`InMemoryUserMemoryStore` 文本检索、去重、system prompt 注入，以及自主写入候选提取和策略裁决。 |
 
 ## 优先级
@@ -43,7 +43,7 @@ Mido 是一个 TypeScript-first SDK，面向这样的产品形态：agent loop �
 
 工作项：
 
-- 新增 `@mido/evaluator`，支持 run metrics、suite aggregation 和
+- 新增 `@mido-agent/evaluator`，支持 run metrics、suite aggregation 和
   Markdown/JSON reports。
 - 定义 run artifact manifest，包含 request hash、event trace、tool manifest、
   model capabilities、skill refs 和 git metadata。

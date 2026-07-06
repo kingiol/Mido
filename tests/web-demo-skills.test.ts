@@ -1,6 +1,6 @@
 import { resolve } from 'node:path';
 
-import { loadAgentSkillsFromDirectory } from '@mido/server-sdk';
+import { loadAgentSkillsFromDirectory } from '@mido-agent/server-sdk';
 
 describe('web demo skills', () => {
   it('loads no-script skills for client metadata probes', async () => {

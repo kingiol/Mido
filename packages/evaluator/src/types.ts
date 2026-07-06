@@ -1,4 +1,4 @@
-import type { AgentMessage, CoreEvent, JsonObject, JsonValue, RunStartRequest, RunTraceSummary, ToolDefinition } from '@mido/protocol-core';
+import type { AgentMessage, CoreEvent, JsonObject, JsonValue, RunStartRequest, RunTraceSummary, ToolDefinition } from '@mido-agent/protocol-core';
 
 export interface RunMetrics {
   runId?: string;

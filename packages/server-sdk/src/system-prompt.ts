@@ -3,7 +3,7 @@ import {
   type AgentMessage,
   type RunStartRequest,
   type ToolDefinition,
-} from "@mido/protocol-core";
+} from "@mido-agent/protocol-core";
 import { quoteClientPrompt, wrapServerClientPrompts } from "./prompts/system-priority.js";
 
 export interface SystemPromptContext {

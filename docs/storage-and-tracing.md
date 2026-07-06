@@ -108,7 +108,7 @@ value 中可以冗余保存 `scopeHash`、`runId`、`threadId` 等元数据，�
 
 ## 推荐文件系统布局
 
-`@mido/server-sdk` 的文件系统存储应使用 scope-first 布局。`rootDir` 仍然可以配置为项目根目录下的 `.mido-store`：
+`@mido-agent/server-sdk` 的文件系统存储应使用 scope-first 布局。`rootDir` 仍然可以配置为项目根目录下的 `.mido-store`：
 
 ```ts
 import {
@@ -116,7 +116,7 @@ import {
   FileSystemThreadStore,
   InMemorySessionStore,
   createAgentRunner
-} from '@mido/server-sdk';
+} from '@mido-agent/server-sdk';
 
 const runner = createAgentRunner({
   modelAdapter,
@@ -506,7 +506,7 @@ interface EventStore {
 
 ## Run Inspector 数据
 
-`@mido/protocol-core` 提供 `buildRunTrace(events)`，可以从一组 `CoreEvent` 生成 inspector 友好的摘要：
+`@mido-agent/protocol-core` 提供 `buildRunTrace(events)`，可以从一组 `CoreEvent` 生成 inspector 友好的摘要：
 
 - run status
 - startedAt / endedAt / durationMs
@@ -518,7 +518,7 @@ interface EventStore {
 示例：
 
 ```ts
-import { buildRunTrace } from '@mido/protocol-core';
+import { buildRunTrace } from '@mido-agent/protocol-core';
 
 const events = await eventStore.loadEvents(scope, { runId });
 const trace = buildRunTrace(events);

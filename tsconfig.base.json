@@ -15,15 +15,15 @@
     "types": ["node", "vitest/globals"],
     "ignoreDeprecations": "6.0",
     "paths": {
-      "@mido/protocol-core": ["./packages/protocol-core/src/index.ts"],
-      "@mido/protocol-agui": ["./packages/protocol-agui/src/index.ts"],
-      "@mido/mcp-core": ["./packages/mcp-core/src/index.ts"],
-      "@mido/server-sdk": ["./packages/server-sdk/src/index.ts"],
-      "@mido/client-core": ["./packages/client-core/src/index.ts"],
-      "@mido/client-web": ["./packages/client-web/src/index.tsx"],
-      "@mido/toolkit-core": ["./packages/toolkit-core/src/index.ts"],
-      "@mido/conformance": ["./packages/conformance/src/index.ts"],
-      "@mido/evaluator": ["./packages/evaluator/src/index.ts"]
+      "@mido-agent/protocol-core": ["./packages/protocol-core/src/index.ts"],
+      "@mido-agent/protocol-agui": ["./packages/protocol-agui/src/index.ts"],
+      "@mido-agent/mcp-core": ["./packages/mcp-core/src/index.ts"],
+      "@mido-agent/server-sdk": ["./packages/server-sdk/src/index.ts"],
+      "@mido-agent/client-core": ["./packages/client-core/src/index.ts"],
+      "@mido-agent/client-web": ["./packages/client-web/src/index.tsx"],
+      "@mido-agent/toolkit-core": ["./packages/toolkit-core/src/index.ts"],
+      "@mido-agent/conformance": ["./packages/conformance/src/index.ts"],
+      "@mido-agent/evaluator": ["./packages/evaluator/src/index.ts"]
     }
   }
 }

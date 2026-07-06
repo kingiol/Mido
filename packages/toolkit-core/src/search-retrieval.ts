@@ -1,7 +1,7 @@
 import { lookup } from 'node:dns/promises';
 import { isIP } from 'node:net';
 
-import type { JsonObject, JsonValue } from '@mido/protocol-core';
+import type { JsonObject, JsonValue } from '@mido-agent/protocol-core';
 
 import { createStableId, createTool, objectSchema, rankByText } from './tool.js';
 import type {

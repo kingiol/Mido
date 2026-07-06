@@ -1,5 +1,5 @@
 {
-  "name": "@mido/client-web",
+  "name": "@mido-agent/client-web",
   "version": "0.1.0",
   "type": "module",
   "main": "./dist/index.cjs",
@@ -13,8 +13,8 @@
     }
   },
   "dependencies": {
-    "@mido/client-core": "workspace:*",
-    "@mido/protocol-core": "workspace:*",
+    "@mido-agent/client-core": "workspace:*",
+    "@mido-agent/protocol-core": "workspace:*",
     "react": "^19.2.6"
   },
   "peerDependencies": {

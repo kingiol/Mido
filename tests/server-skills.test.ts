@@ -2,7 +2,7 @@ import { chmod, mkdir, mkdtemp, readFile, symlink, writeFile } from 'node:fs/pro
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 
-import { type AgentMessage } from '@mido/protocol-core';
+import { type AgentMessage } from '@mido-agent/protocol-core';
 import {
   InMemorySessionStore,
   buildDockerAgentSkillSandboxCommand,
@@ -18,7 +18,7 @@ import {
   type ModelAdapter,
   type ModelAdapterEvent,
   type ModelAdapterRunInput
-} from '@mido/server-sdk';
+} from '@mido-agent/server-sdk';
 
 describe('agent skills', () => {
   it('indexes only SKILL.md frontmatter before loading instructions', async () => {

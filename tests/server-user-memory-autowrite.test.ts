@@ -1,4 +1,4 @@
-import type { AgentMessage, CoreEvent, ModelProviderMetadata, RunCheckpoint, RunStartRequest } from '@mido/protocol-core';
+import type { AgentMessage, CoreEvent, ModelProviderMetadata, RunCheckpoint, RunStartRequest } from '@mido-agent/protocol-core';
 import {
   InMemorySessionStore,
   InMemoryUserMemoryStore,
@@ -11,7 +11,7 @@ import {
   type ModelAdapterRunInput,
   type StorageScope,
   type UserMemoryCandidate
-} from '@mido/server-sdk';
+} from '@mido-agent/server-sdk';
 
 const approvalSchema = {
   type: 'object',

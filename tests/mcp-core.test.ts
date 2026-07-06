@@ -1,4 +1,4 @@
-import { createManagedMcpConnection, type McpManagedConnectionStatus, type McpTool, type McpToolClient } from '@mido/mcp-core';
+import { createManagedMcpConnection, type McpManagedConnectionStatus, type McpTool, type McpToolClient } from '@mido-agent/mcp-core';
 
 function makeTool(name: string, description: string): McpTool {
   return {

@@ -1,5 +1,5 @@
 {
-  "name": "@mido/toolkit-core",
+  "name": "@mido-agent/toolkit-core",
   "version": "0.1.0",
   "type": "module",
   "main": "./dist/index.cjs",
@@ -33,7 +33,7 @@
     }
   },
   "dependencies": {
-    "@mido/protocol-core": "workspace:*"
+    "@mido-agent/protocol-core": "workspace:*"
   },
   "scripts": {
     "build": "tsup src/index.ts src/browser.ts src/memory.ts src/search-retrieval.ts src/workspace.ts --format esm,cjs --dts"

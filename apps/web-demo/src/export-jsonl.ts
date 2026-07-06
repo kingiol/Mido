@@ -1,4 +1,4 @@
-import type { CoreEvent } from '@mido/protocol-core';
+import type { CoreEvent } from '@mido-agent/protocol-core';
 
 type SaveFilePickerWindow = Window & typeof globalThis & {
   showSaveFilePicker?: (options?: {

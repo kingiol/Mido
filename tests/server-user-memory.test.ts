@@ -1,4 +1,4 @@
-import type { AgentMessage, CoreEvent, ModelProviderMetadata, RunStartRequest } from '@mido/protocol-core';
+import type { AgentMessage, CoreEvent, ModelProviderMetadata, RunStartRequest } from '@mido-agent/protocol-core';
 import {
   InMemorySessionStore,
   InMemoryUserMemoryStore,
@@ -7,7 +7,7 @@ import {
   type ModelAdapterEvent,
   type ModelAdapterRunInput,
   type StorageScope
-} from '@mido/server-sdk';
+} from '@mido-agent/server-sdk';
 
 describe('server user memory', () => {
   it('deduplicates scoped semantic memories by content hash', async () => {

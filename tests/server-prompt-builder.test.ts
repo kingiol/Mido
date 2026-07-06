@@ -6,7 +6,7 @@ import {
   quoteClientPrompt,
   renderPromptSections,
   wrapServerClientPrompts,
-} from '@mido/server-sdk';
+} from '@mido-agent/server-sdk';
 
 describe('Mido agent harness prompt builder', () => {
   it('renders core harness sections in a stable order', () => {

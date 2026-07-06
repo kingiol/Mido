@@ -79,7 +79,7 @@ Mido 现在已经不是一个裸 agent。它有稳定的 server-owned loop、工
 - Create: `docs/evaluation.md`
 
 步骤：
-- [ ] 新增 `@mido/evaluator` package，导出 `EvalCase`、`EvalRunArtifact`、`RunMetrics`、`EvalSuiteReport` 类型。
+- [ ] 新增 `@mido-agent/evaluator` package，导出 `EvalCase`、`EvalRunArtifact`、`RunMetrics`、`EvalSuiteReport` 类型。
 - [ ] 写 `calculateRunMetrics(events, options)`，输入 `CoreEvent[]`，内部复用 `buildRunTrace(events)`。
 - [ ] 写 `aggregateEvalSuite(results)`，聚合 case 级指标。
 - [ ] 写 `buildRunArtifact(input)`，保存 request、events、trace、metrics、tool manifest、model capabilities、skill refs、git sha、createdAt。

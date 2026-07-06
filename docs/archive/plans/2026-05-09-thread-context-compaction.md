@@ -6,7 +6,7 @@
 
 **架构：** 把 `summary` 做成 `AgentMessage.role` 的一等角色，而不是额外的 `ThreadSnapshot.context` 字段。UI 和审计仍然读完整 `messages`；runner 只在 SDK 内部 model input 边界做窗口选择。生成 summary 时要扫描被压缩范围内有意义的 tool 结果，把仍会影响后续任务的事实写进 summary 文本。provider adapter 负责把内部 `summary` role 映射成具体 LLM API 支持的 assistant-like message，不能映射成 `user`。
 
-**技术栈：** TypeScript、Vitest、`@mido/protocol-core`、`@mido/server-sdk`、provider adapters、conformance schemas。
+**技术栈：** TypeScript、Vitest、`@mido-agent/protocol-core`、`@mido-agent/server-sdk`、provider adapters、conformance schemas。
 
 ---
 
@@ -457,8 +457,8 @@ git commit -m "feat: add summary agent message role"
 ```ts
 import { describe, expect, it } from "vitest";
 
-import type { AgentMessage } from "@mido/protocol-core";
-import { selectSummaryWindowMessages } from "@mido/server-sdk";
+import type { AgentMessage } from "@mido-agent/protocol-core";
+import { selectSummaryWindowMessages } from "@mido-agent/server-sdk";
 
 describe("selectSummaryWindowMessages", () => {
   it("keeps system messages and the latest summary window from the first retained user", () => {
@@ -543,7 +543,7 @@ pnpm test tests/server-summary-messages.test.ts
 创建 `packages/server-sdk/src/summary-messages.ts`：
 
 ```ts
-import type { AgentMessage } from "@mido/protocol-core";
+import type { AgentMessage } from "@mido-agent/protocol-core";
 
 export function selectSummaryWindowMessages(
   messages: AgentMessage[],
@@ -618,7 +618,7 @@ git commit -m "feat: select summary message window"
 在 `tests/server-summary-messages.test.ts` 中追加：
 
 ```ts
-import { extractSummaryToolFacts } from "@mido/server-sdk";
+import { extractSummaryToolFacts } from "@mido-agent/server-sdk";
 
 it("extracts meaningful tool result facts for a summary", () => {
   const messages: AgentMessage[] = [
@@ -684,7 +684,7 @@ import type {
   AgentMessage,
   JsonObject,
   ToolResultPart,
-} from "@mido/protocol-core";
+} from "@mido-agent/protocol-core";
 
 export interface SummaryToolFact {
   messageId: string;
@@ -820,7 +820,7 @@ git commit -m "feat: extract tool facts for summary messages"
 import {
   SUMMARY_COMPRESSOR_SYSTEM_PROMPT,
   buildSummaryCompressorMessages,
-} from "@mido/server-sdk";
+} from "@mido-agent/server-sdk";
 
 it("builds isolated compressor messages with fixed system prompt and structured payload", () => {
   const coveredMessages = [
@@ -866,7 +866,7 @@ pnpm test tests/server-summary-messages.test.ts
 创建 `packages/server-sdk/src/summary-compressor.ts`：
 
 ```ts
-import { createId, nowIso, stableStringify, type AgentMessage } from "@mido/protocol-core";
+import { createId, nowIso, stableStringify, type AgentMessage } from "@mido-agent/protocol-core";
 
 import type { SummaryToolFact } from "./summary-tool-facts.js";
 
@@ -986,7 +986,7 @@ git commit -m "feat: add isolated summary compressor prompt"
 import {
   resolveRunContextBudget,
   shouldCreateSummaryMessage,
-} from "@mido/server-sdk";
+} from "@mido-agent/server-sdk";
 
 it("resolves context budget from model limits and request overrides", () => {
   expect(
@@ -1055,7 +1055,7 @@ pnpm test tests/server-summary-messages.test.ts
 创建 `packages/server-sdk/src/context-budget.ts`：
 
 ```ts
-import type { RunContextBudget } from "@mido/protocol-core";
+import type { RunContextBudget } from "@mido-agent/protocol-core";
 
 export interface ContextBudgetInput {
   contextWindowTokens?: number;

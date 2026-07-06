@@ -2,9 +2,9 @@
 
 import { act, renderHook, waitFor } from '@testing-library/react';
 
-import { createAgentClient, type AgentTransport } from '@mido/client-core';
-import { createBrowserSseTransport, usePendingInteractiveTools } from '@mido/client-web';
-import type { CoreEvent, RunResumeRequest, RunStartRequest } from '@mido/protocol-core';
+import { createAgentClient, type AgentTransport } from '@mido-agent/client-core';
+import { createBrowserSseTransport, usePendingInteractiveTools } from '@mido-agent/client-web';
+import type { CoreEvent, RunResumeRequest, RunStartRequest } from '@mido-agent/protocol-core';
 
 const approvalSchema = {
   type: 'object',

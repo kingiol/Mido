@@ -28,15 +28,15 @@ Use lockstep SemVer across all public Mido SDK packages for the initial external
 
 All public packages should share the same release version:
 
-- `@mido/protocol-core`
-- `@mido/protocol-agui`
-- `@mido/mcp-core`
-- `@mido/server-sdk`
-- `@mido/client-core`
-- `@mido/client-web`
-- `@mido/toolkit-core`
-- `@mido/conformance`
-- `@mido/evaluator`
+- `@mido-agent/protocol-core`
+- `@mido-agent/protocol-agui`
+- `@mido-agent/mcp-core`
+- `@mido-agent/server-sdk`
+- `@mido-agent/client-core`
+- `@mido-agent/client-web`
+- `@mido-agent/toolkit-core`
+- `@mido-agent/conformance`
+- `@mido-agent/evaluator`
 - `MidoClient` Swift Package
 
 This keeps the third-party rule simple: use the same Mido version across server and client SDKs unless the compatibility matrix says otherwise.
@@ -48,7 +48,7 @@ Mido should track three related but distinct versions.
 | Version | Example | Owner | Changes When |
 | --- | --- | --- | --- |
 | SDK version | `0.2.0` | Release process | A package release is cut |
-| Protocol version | `mido.protocol.v1` | `@mido/protocol-core` | The wire contract changes incompatibly |
+| Protocol version | `mido.protocol.v1` | `@mido-agent/protocol-core` | The wire contract changes incompatibly |
 | Schema/artifact version | `mido.run-artifact.v1` | Feature-specific packages | Stored or generated artifact shape changes |
 
 The SDK version answers "which package release am I using?"
@@ -115,14 +115,14 @@ Add small repo-local scripts before introducing heavier automation:
 
 After the local versioning loop is stable, add Changesets for changelog and npm publishing.
 
-Changesets should run in fixed/lockstep mode for `@mido/*` packages. The evaluator and toolkit packages can move to independent versioning later if they become meaningfully decoupled.
+Changesets should run in fixed/lockstep mode for `@mido-agent/*` packages. The evaluator and toolkit packages can move to independent versioning later if they become meaningfully decoupled.
 
 ## Documentation Changes
 
 The README should make versioned installation the default:
 
 ```bash
-pnpm add @mido/server-sdk@0.2.0 @mido/client-core@0.2.0
+pnpm add @mido-agent/server-sdk@0.2.0 @mido-agent/client-core@0.2.0
 ```
 
 ```swift
@@ -144,7 +144,7 @@ The versioning work is done when:
 - Every public TypeScript package version matches the root package version.
 - Every generated TypeScript and Swift version constant matches the root package version.
 - The root Swift package wrapper can be resolved by `swift package describe`.
-- GitHub Actions can resolve `server-sdk-v0.1.0` to `@mido/server-sdk` and `v0.1.0` to `MidoClient`.
+- GitHub Actions can resolve `server-sdk-v0.1.0` to `@mido-agent/server-sdk` and `v0.1.0` to `MidoClient`.
 - `swift test --package-path packages/client-ios` still passes.
 - `pnpm version:check` fails on any version drift.
 - `pnpm release:check` passes locally.

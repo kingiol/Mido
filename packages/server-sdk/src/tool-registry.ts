@@ -1,4 +1,4 @@
-import { normalizeToolDefinition, type ToolDefinition } from '@mido/protocol-core';
+import { normalizeToolDefinition, type ToolDefinition } from '@mido-agent/protocol-core';
 
 export type RegisteredToolDefinition = ToolDefinition & Required<Pick<ToolDefinition, 'toolId' | 'modelName'>>;
 

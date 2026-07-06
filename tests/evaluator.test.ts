@@ -1,4 +1,4 @@
-import type { AgentMessage, CoreEvent, ToolDefinition } from '@mido/protocol-core';
+import type { AgentMessage, CoreEvent, ToolDefinition } from '@mido-agent/protocol-core';
 import {
   aggregateEvalSuite,
   buildRunArtifact,
@@ -6,7 +6,7 @@ import {
   hashMessages,
   hashToolManifest,
   renderEvalReport
-} from '@mido/evaluator';
+} from '@mido-agent/evaluator';
 
 const baseTimestamp = '2026-05-28T00:00:00.000Z';
 

@@ -1,4 +1,4 @@
-import type { CoreEvent } from '@mido/protocol-core';
+import type { CoreEvent } from '@mido-agent/protocol-core';
 
 import type { EvalExpectation, FixtureEvalCase } from './types.js';
 

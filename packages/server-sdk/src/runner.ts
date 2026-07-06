@@ -37,7 +37,7 @@ import {
   type ToolResultEnvelope,
   type ToolResultEvent,
   validateSchema
-} from '@mido/protocol-core';
+} from '@mido-agent/protocol-core';
 
 import {
   getStorageScopeId,

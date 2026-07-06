@@ -59,19 +59,19 @@ importers:
 
   packages/client-core:
     dependencies:
-      '@mido/mcp-core':
+      '@mido-agent/mcp-core':
         specifier: workspace:*
         version: link:../mcp-core
-      '@mido/protocol-core':
+      '@mido-agent/protocol-core':
         specifier: workspace:*
         version: link:../protocol-core
 
   packages/client-web:
     dependencies:
-      '@mido/client-core':
+      '@mido-agent/client-core':
         specifier: workspace:*
         version: link:../client-core
-      '@mido/protocol-core':
+      '@mido-agent/protocol-core':
         specifier: workspace:*
         version: link:../protocol-core
       react:
@@ -80,22 +80,22 @@ importers:
 
   packages/conformance:
     dependencies:
-      '@mido/protocol-agui':
+      '@mido-agent/protocol-agui':
         specifier: workspace:*
         version: link:../protocol-agui
-      '@mido/protocol-core':
+      '@mido-agent/protocol-core':
         specifier: workspace:*
         version: link:../protocol-core
 
   packages/evaluator:
     dependencies:
-      '@mido/protocol-core':
+      '@mido-agent/protocol-core':
         specifier: workspace:*
         version: link:../protocol-core
 
   packages/mcp-core:
     dependencies:
-      '@mido/protocol-core':
+      '@mido-agent/protocol-core':
         specifier: workspace:*
         version: link:../protocol-core
       '@modelcontextprotocol/sdk':
@@ -104,7 +104,7 @@ importers:
 
   packages/protocol-agui:
     dependencies:
-      '@mido/protocol-core':
+      '@mido-agent/protocol-core':
         specifier: workspace:*
         version: link:../protocol-core
 
@@ -112,10 +112,10 @@ importers:
 
   packages/server-sdk:
     dependencies:
-      '@mido/mcp-core':
+      '@mido-agent/mcp-core':
         specifier: workspace:*
         version: link:../mcp-core
-      '@mido/protocol-core':
+      '@mido-agent/protocol-core':
         specifier: workspace:*
         version: link:../protocol-core
       redis:
@@ -124,7 +124,7 @@ importers:
 
   packages/toolkit-core:
     dependencies:
-      '@mido/protocol-core':
+      '@mido-agent/protocol-core':
         specifier: workspace:*
         version: link:../protocol-core
 

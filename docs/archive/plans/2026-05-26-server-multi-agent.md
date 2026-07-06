@@ -6,7 +6,7 @@
 
 **架构：**V1 采用 `supervisor + sub-agents as server tools`。根 `AgentRunner` 继续拥有唯一的用户可见 agent loop、客户端暂停恢复协议、权限策略和最终回答；每个 specialist agent 被包装成普通 `server` tool，在服务端内部运行独立 child run，并把紧凑结果返回给根 agent。V1 不引入 handoff、swarm 或一等公民 graph runtime，避免过早扩大协议和客户端改动面。
 
-**Tech Stack：**TypeScript、pnpm workspace、Vitest、`@mido/protocol-core`、`@mido/server-sdk`、`CoreEvent`、`SessionStore`、`ThreadStore`、`EventStore`、SSE + HTTP POST transport。
+**Tech Stack：**TypeScript、pnpm workspace、Vitest、`@mido-agent/protocol-core`、`@mido-agent/server-sdk`、`CoreEvent`、`SessionStore`、`ThreadStore`、`EventStore`、SSE + HTTP POST transport。
 
 ---
 
@@ -83,7 +83,7 @@ import type {
   JsonObject,
   JsonValue,
   ToolDefinition,
-} from "@mido/protocol-core";
+} from "@mido-agent/protocol-core";
 import type {
   AgentRunner,
   RunExecutionContext,
@@ -235,13 +235,13 @@ import {
   type ModelAdapter,
   type ModelAdapterEvent,
   type ModelAdapterRunInput,
-} from "@mido/server-sdk";
+} from "@mido-agent/server-sdk";
 import type {
   AgentMessage,
   CoreEvent,
   JsonObject,
   RunStartRequest,
-} from "@mido/protocol-core";
+} from "@mido-agent/protocol-core";
 
 class FunctionModelAdapter implements ModelAdapter {
   constructor(
@@ -488,7 +488,7 @@ import {
   type JsonObject,
   type JsonValue,
   type ToolDefinition,
-} from "@mido/protocol-core";
+} from "@mido-agent/protocol-core";
 
 import type {
   AgentRunner,

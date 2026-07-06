@@ -15,25 +15,25 @@ Use Mido when your app needs the model to reason on the server while the client 
 
 ## What is in this repository
 
-- `@mido/protocol-core`
+- `@mido-agent/protocol-core`
   Shared event types, run request types, tool contracts, JSON Schemas, and schema validation helpers.
-- `@mido/protocol-agui`
+- `@mido-agent/protocol-agui`
   Boundary adapter between `CoreEvent` and AG-UI-shaped events.
-- `@mido/mcp-core`
+- `@mido-agent/mcp-core`
   Managed MCP connections, health checks, tool refresh diffs, and mapping helpers for server or client runtimes.
-- `@mido/server-sdk`
+- `@mido-agent/server-sdk`
   Server-owned agent loop, tool routing, suspend/resume flow, `SessionStore`, durable thread/event stores, tracing, user memory system with autonomous write, and provider adapters including DeepSeek.
-- `@mido/client-core`
+- `@mido-agent/client-core`
   Transport-agnostic client runtime with local tool registry, pending interactive tool state, and automatic resume for `client_auto` tools.
-- `@mido/client-web`
+- `@mido-agent/client-web`
   Browser transport, React hooks, and a minimal reference panel.
 - `MidoClient`
   iOS Swift 6 client SDK packaged with Swift Package Manager under `packages/client-ios`.
-- `@mido/toolkit-core`
+- `@mido-agent/toolkit-core`
   Optional agent tools for workspace access, web search/fetch, document retrieval, browser automation adapters, and scoped memory.
-- `@mido/conformance`
+- `@mido-agent/conformance`
   JSON Schema export, native client contract docs, and round-trip conformance helpers.
-- `@mido/evaluator`
+- `@mido-agent/evaluator`
   Offline run metrics, suite aggregation, reproducible run artifacts, deterministic graders, and local smoke/safety reports.
 
 ## Repository map
@@ -68,8 +68,8 @@ Use Mido when your app needs the model to reason on the server while the client 
 Use the same Mido SDK version across server and client packages unless the compatibility matrix says otherwise.
 
 ```bash
-pnpm add @mido/server-sdk@0.1.0 @mido/client-core@0.1.0
-pnpm add @mido/client-web@0.1.0
+pnpm add @mido-agent/server-sdk@0.1.0 @mido-agent/client-core@0.1.0
+pnpm add @mido-agent/client-web@0.1.0
 ```
 
 For Swift Package Manager, depend on a repository tag:
@@ -99,15 +99,15 @@ Then push one tag for the SDK you want to publish:
 
 | Tag | Publishes |
 | --- | --- |
-| `protocol-core-v0.2.0` | `@mido/protocol-core` to npm |
-| `protocol-agui-v0.2.0` | `@mido/protocol-agui` to npm |
-| `mcp-core-v0.2.0` | `@mido/mcp-core` to npm |
-| `server-sdk-v0.2.0` | `@mido/server-sdk` to npm |
-| `client-core-v0.2.0` | `@mido/client-core` to npm |
-| `client-web-v0.2.0` | `@mido/client-web` to npm |
-| `toolkit-core-v0.2.0` | `@mido/toolkit-core` to npm |
-| `conformance-v0.2.0` | `@mido/conformance` to npm |
-| `evaluator-v0.2.0` | `@mido/evaluator` to npm |
+| `protocol-core-v0.2.0` | `@mido-agent/protocol-core` to npm |
+| `protocol-agui-v0.2.0` | `@mido-agent/protocol-agui` to npm |
+| `mcp-core-v0.2.0` | `@mido-agent/mcp-core` to npm |
+| `server-sdk-v0.2.0` | `@mido-agent/server-sdk` to npm |
+| `client-core-v0.2.0` | `@mido-agent/client-core` to npm |
+| `client-web-v0.2.0` | `@mido-agent/client-web` to npm |
+| `toolkit-core-v0.2.0` | `@mido-agent/toolkit-core` to npm |
+| `conformance-v0.2.0` | `@mido-agent/conformance` to npm |
+| `evaluator-v0.2.0` | `@mido-agent/evaluator` to npm |
 | `v0.2.0` | `MidoClient` Swift Package GitHub release |
 
 Example:

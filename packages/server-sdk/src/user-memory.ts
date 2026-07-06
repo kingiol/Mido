@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto';
 
-import { nowIso, type AgentMessage, type JsonObject } from '@mido/protocol-core';
+import { nowIso, type AgentMessage, type JsonObject } from '@mido-agent/protocol-core';
 
 import { getStorageScopeHash, normalizeStorageScope, type StorageScope } from './store.js';
 

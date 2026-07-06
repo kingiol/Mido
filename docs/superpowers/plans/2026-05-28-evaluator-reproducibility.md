@@ -4,9 +4,9 @@
 
 **Goal:** Build the first P0 evaluation and reproducibility loop for Mido.
 
-**Architecture:** Add `@mido/evaluator` as a pure SDK package that consumes `CoreEvent[]`, reuses `buildRunTrace(events)`, and emits metrics, artifacts, suite reports, and deterministic grading results. Add local JSONL eval cases plus a CLI runner that uses fixture events so smoke/safety checks run without external API keys.
+**Architecture:** Add `@mido-agent/evaluator` as a pure SDK package that consumes `CoreEvent[]`, reuses `buildRunTrace(events)`, and emits metrics, artifacts, suite reports, and deterministic grading results. Add local JSONL eval cases plus a CLI runner that uses fixture events so smoke/safety checks run without external API keys.
 
-**Tech Stack:** TypeScript, Vitest, pnpm workspaces, `@mido/protocol-core`.
+**Tech Stack:** TypeScript, Vitest, pnpm workspaces, `@mido-agent/protocol-core`.
 
 ---
 

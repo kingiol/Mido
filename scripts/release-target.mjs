@@ -10,55 +10,55 @@ const semverPattern = String.raw`\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-
 const targets = {
   'protocol-core': {
     kind: 'npm',
-    packageName: '@mido/protocol-core',
+    packageName: '@mido-agent/protocol-core',
     packagePath: 'packages/protocol-core',
     tagPrefix: 'protocol-core-v'
   },
   'protocol-agui': {
     kind: 'npm',
-    packageName: '@mido/protocol-agui',
+    packageName: '@mido-agent/protocol-agui',
     packagePath: 'packages/protocol-agui',
     tagPrefix: 'protocol-agui-v'
   },
   'mcp-core': {
     kind: 'npm',
-    packageName: '@mido/mcp-core',
+    packageName: '@mido-agent/mcp-core',
     packagePath: 'packages/mcp-core',
     tagPrefix: 'mcp-core-v'
   },
   'server-sdk': {
     kind: 'npm',
-    packageName: '@mido/server-sdk',
+    packageName: '@mido-agent/server-sdk',
     packagePath: 'packages/server-sdk',
     tagPrefix: 'server-sdk-v'
   },
   'client-core': {
     kind: 'npm',
-    packageName: '@mido/client-core',
+    packageName: '@mido-agent/client-core',
     packagePath: 'packages/client-core',
     tagPrefix: 'client-core-v'
   },
   'client-web': {
     kind: 'npm',
-    packageName: '@mido/client-web',
+    packageName: '@mido-agent/client-web',
     packagePath: 'packages/client-web',
     tagPrefix: 'client-web-v'
   },
   'toolkit-core': {
     kind: 'npm',
-    packageName: '@mido/toolkit-core',
+    packageName: '@mido-agent/toolkit-core',
     packagePath: 'packages/toolkit-core',
     tagPrefix: 'toolkit-core-v'
   },
   conformance: {
     kind: 'npm',
-    packageName: '@mido/conformance',
+    packageName: '@mido-agent/conformance',
     packagePath: 'packages/conformance',
     tagPrefix: 'conformance-v'
   },
   evaluator: {
     kind: 'npm',
-    packageName: '@mido/evaluator',
+    packageName: '@mido-agent/evaluator',
     packagePath: 'packages/evaluator',
     tagPrefix: 'evaluator-v'
   },

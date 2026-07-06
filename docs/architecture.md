@@ -19,31 +19,31 @@ This document explains the v1 package boundaries, ownership model, and runtime r
 
 ```mermaid
 flowchart LR
-  A["@mido/protocol-core"] --> B["@mido/protocol-agui"]
-  A --> C["@mido/server-sdk"]
-  A --> D["@mido/client-core"]
-  A --> E["@mido/client-web"]
+  A["@mido-agent/protocol-core"] --> B["@mido-agent/protocol-agui"]
+  A --> C["@mido-agent/server-sdk"]
+  A --> D["@mido-agent/client-core"]
+  A --> E["@mido-agent/client-web"]
   A --> G["MidoClient (Swift Package)"]
-  A --> F["@mido/conformance"]
+  A --> F["@mido-agent/conformance"]
   B --> F
   D --> E
 ```
 
 ## Responsibility split
 
-### `@mido/protocol-core`
+### `@mido-agent/protocol-core`
 
 - Defines `CoreEvent`, `RunStartRequest`, `RunResumeRequest`, `RunCheckpoint`, and tool envelopes.
 - Exports runtime validators and JSON Schema documents.
 - Acts as the single source of truth for all SDKs.
 
-### `@mido/protocol-agui`
+### `@mido-agent/protocol-agui`
 
 - Maps `CoreEvent` into AG-UI-shaped events.
 - Maps AG-UI events back into `CoreEvent`.
 - Uses a custom namespace for capabilities that do not map cleanly.
 
-### `@mido/server-sdk`
+### `@mido-agent/server-sdk`
 
 - Owns the only agent loop.
 - Calls the model adapter.
@@ -78,7 +78,7 @@ handoff or swarm. Those patterns require explicit protocol and UI state for
 active agents, context visibility, permission inheritance, and resumable child
 client tools.
 
-### `@mido/client-core`
+### `@mido-agent/client-core`
 
 - Consumes the event stream.
 - Tracks local shared state and tool call status.
@@ -88,7 +88,7 @@ client tools.
 - Executes approved `client_interactive` tools and submits rejection results for rejected ones.
 - Submits `RunResumeRequest` when a tool result is ready.
 
-### `@mido/client-web`
+### `@mido-agent/client-web`
 
 - Implements `SSE down + POST up`.
 - Exposes `useAgentRun`, `useToolCalls`, and `usePendingInteractiveTools`.
@@ -102,7 +102,7 @@ client tools.
 - Surfaces `client_interactive` tool calls as pending snapshot state for app UI approval.
 - Implements `URLSessionSSETransport` for the same `SSE down + POST up` HTTP contract as the web client.
 
-### `@mido/conformance`
+### `@mido-agent/conformance`
 
 - Exports the schema bundle for non-TypeScript clients.
 - Documents native client rules and event ordering.
@@ -181,7 +181,7 @@ Agent Skills are instruction/resource packages, not a separate runtime.
 
 Clients can pass `metadata.enabledSkills` as a preference. The server still selects the final skill set and records audit events.
 
-Managed MCP connections live in `@mido/mcp-core`. They track connection state, expose explicit health checks and reconnect helpers, retry a stale tool call once, and return tool refresh diffs. Client SDK refresh can update and remove registered MCP tools. Server SDK refresh returns mapped definitions for the caller to apply deliberately instead of mutating the runner registry while runs may still be active.
+Managed MCP connections live in `@mido-agent/mcp-core`. They track connection state, expose explicit health checks and reconnect helpers, retry a stale tool call once, and return tool refresh diffs. Client SDK refresh can update and remove registered MCP tools. Server SDK refresh returns mapped definitions for the caller to apply deliberately instead of mutating the runner registry while runs may still be active.
 
 ## Transport contract
 

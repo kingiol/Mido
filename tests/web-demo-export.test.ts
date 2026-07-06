@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 
-import type { CoreEvent } from '@mido/protocol-core';
+import type { CoreEvent } from '@mido-agent/protocol-core';
 
 import { buildEventJsonl, createEventExportFilename, exportEventsAsJsonl } from '../apps/web-demo/src/export-jsonl.js';
 

@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 
-import type { JsonObject } from '@mido/protocol-core';
+import type { JsonObject } from '@mido-agent/protocol-core';
 
 import { createStableId, createTool, objectSchema, rankByText } from './tool.js';
 import type { CreateMemoryToolsOptions, MemoryEntry, MemorySearchResult, MemoryStore, ToolkitToolDefinition } from './types.js';

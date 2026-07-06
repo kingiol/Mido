@@ -4,7 +4,7 @@
 
 **目标：**把 Mido 从一个已经比较扎实的 agent SDK runtime，推进成一个可用于真实产品集成的完整 AI Agent 参考实现。它需要具备安全工具执行、持久记忆、运行恢复、可观察性、provider 适配验证、完整 reference app 和发布文档。
 
-**架构：**继续保持服务端掌控的 agent loop 作为核心。完整 agent 所需的产品能力放在核心 loop 外围，包括权限事件、运行 replay、持久 memory、browser/workspace 执行面、provider conformance、可复用 inspector 和参考应用。可选能力放在 `@mido/toolkit-core` 里，避免让 `@mido/server-sdk` 绑定某个业务场景。
+**架构：**继续保持服务端掌控的 agent loop 作为核心。完整 agent 所需的产品能力放在核心 loop 外围，包括权限事件、运行 replay、持久 memory、browser/workspace 执行面、provider conformance、可复用 inspector 和参考应用。可选能力放在 `@mido-agent/toolkit-core` 里，避免让 `@mido-agent/server-sdk` 绑定某个业务场景。
 
 **技术栈：**TypeScript、pnpm workspace、Vitest、React、SSE + HTTP POST transport、JSON Schema、MCP Streamable HTTP、filesystem/Redis stores、可选 vector store adapter、Vite demo app。
 
@@ -191,7 +191,7 @@ rejectPermission(toolCallId: string, reason?: string): Promise<void>;
 
 - [ ] **步骤 6: 增加 React hook 和 demo UI**
 
-从 `@mido/client-web` 导出：
+从 `@mido-agent/client-web` 导出：
 
 ```ts
 usePendingPermissions(client)

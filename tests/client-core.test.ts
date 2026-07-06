@@ -1,6 +1,6 @@
-import { createAgentClient, createAgentSkillManager, createManagedMcpConnection, createMcpClientTools, refreshMcpClientTools } from '@mido/client-core';
-import type { AgentTransport, ClientSkillStore, McpToolClient } from '@mido/client-core';
-import type { CoreEvent, RunResumeRequest, RunStartRequest } from '@mido/protocol-core';
+import { createAgentClient, createAgentSkillManager, createManagedMcpConnection, createMcpClientTools, refreshMcpClientTools } from '@mido-agent/client-core';
+import type { AgentTransport, ClientSkillStore, McpToolClient } from '@mido-agent/client-core';
+import type { CoreEvent, RunResumeRequest, RunStartRequest } from '@mido-agent/protocol-core';
 
 const locationResultSchema = {
   type: 'object',

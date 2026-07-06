@@ -2,7 +2,7 @@ import type { Dirent } from 'node:fs';
 import { readdir, realpath } from 'node:fs/promises';
 import { basename, dirname, isAbsolute, join, relative, resolve, sep } from 'node:path';
 
-import type { JsonObject } from '@mido/protocol-core';
+import type { JsonObject } from '@mido-agent/protocol-core';
 
 import { readOptionalString } from '../validation.js';
 

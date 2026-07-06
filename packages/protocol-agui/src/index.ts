@@ -13,9 +13,9 @@ import type {
   ToolCallEndEvent,
   ToolCallStartEvent,
   ToolResultEvent
-} from '@mido/protocol-core';
+} from '@mido-agent/protocol-core';
 
-export { MIDO_PROTOCOL_VERSION, MIDO_SDK_VERSION } from '@mido/protocol-core';
+export { MIDO_PROTOCOL_VERSION, MIDO_SDK_VERSION } from '@mido-agent/protocol-core';
 
 const CUSTOM_EVENT_PREFIX = 'mido/';
 

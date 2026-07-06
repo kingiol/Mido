@@ -9,7 +9,7 @@
 
 ## 结论
 
-Mido 现有 `SessionStore` / `ThreadStore` / `EventStore` 三层存储均以 run 或 thread 为生命周期单位，无法支持跨 session 的用户级持久记忆。`@mido/toolkit-core` 的 `MemoryStore` 提供了 scoped 文本存储，但没有向量语义检索，没有自动提取，也没有与 agent loop 的系统级集成。
+Mido 现有 `SessionStore` / `ThreadStore` / `EventStore` 三层存储均以 run 或 thread 为生命周期单位，无法支持跨 session 的用户级持久记忆。`@mido-agent/toolkit-core` 的 `MemoryStore` 提供了 scoped 文本存储，但没有向量语义检索，没有自动提取，也没有与 agent loop 的系统级集成。
 
 本方案设计 **第四层存储 `UserMemoryStore`**，与前三层平级、通过统一的 `StorageScope` 做多租户隔离、与 agent loop 在 `runner.ts` 中以最小侵入方式集成。
 

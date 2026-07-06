@@ -18,7 +18,7 @@ import {
   type ToolDefinition,
   type ToolResultEnvelope,
   validateSchema
-} from '@mido/protocol-core';
+} from '@mido-agent/protocol-core';
 
 export { MIDO_PROTOCOL_VERSION, MIDO_SDK_VERSION };
 

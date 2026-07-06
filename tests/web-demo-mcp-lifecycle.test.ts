@@ -8,8 +8,8 @@ import {
   createManagedMcpHttpConnection,
   refreshMcpClientTools,
   registerManagedMcpHttpClientTools
-} from '@mido/client-web';
-import { normalizeToolDefinition } from '@mido/protocol-core';
+} from '@mido-agent/client-web';
+import { normalizeToolDefinition } from '@mido-agent/protocol-core';
 import type { SearchWebProvider } from '../packages/toolkit-core/src/index.js';
 
 import { createDemoToolkitTools, registerDemoToolkitTools } from '../apps/web-demo/demo-toolkit.js';

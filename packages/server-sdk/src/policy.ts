@@ -1,4 +1,4 @@
-import type { JsonObject, JsonValue, ToolDefinition } from '@mido/protocol-core';
+import type { JsonObject, JsonValue, ToolDefinition } from '@mido-agent/protocol-core';
 
 export type ToolRiskLevel = 'low' | 'medium' | 'high' | 'destructive';
 export type DefaultToolPolicyMode = 'permissive' | 'balanced' | 'strict';

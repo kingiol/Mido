@@ -1,10 +1,10 @@
 # Agent Workflow Orchestration Design
 
-> **给 agentic workers：**实现本计划时，必须使用 `superpowers:test-driven-development`。先写失败测试，再写实现。不要把 workflow 编排塞进 `toolkit-core`；这是 server runtime 能力，属于 `@mido/server-sdk`。
+> **给 agentic workers：**实现本计划时，必须使用 `superpowers:test-driven-development`。先写失败测试，再写实现。不要把 workflow 编排塞进 `toolkit-core`；这是 server runtime 能力，属于 `@mido-agent/server-sdk`。
 
 **目标：**在 Mido server 端新增动态 multi-agent workflow 能力，让主 agent 可以自行判断是否创建多个子 agent，并控制这些 agent 的串行、并发或 DAG 依赖关系。
 
-**核心结论：**保留现有 `createAgentTool(...)` 作为“固定 specialist agent”简单模式；新增 `createAgentWorkflowTool(...)` 作为“动态创建和调度多个 agents”的编排模式。两者都属于 `@mido/server-sdk`，不放入 `@mido/toolkit-core`。
+**核心结论：**保留现有 `createAgentTool(...)` 作为“固定 specialist agent”简单模式；新增 `createAgentWorkflowTool(...)` 作为“动态创建和调度多个 agents”的编排模式。两者都属于 `@mido-agent/server-sdk`，不放入 `@mido-agent/toolkit-core`。
 
 ---
 
@@ -49,14 +49,14 @@ main agent 自己判断：
 推荐分层：
 
 ```text
-@mido/server-sdk
+@mido-agent/server-sdk
   createAgentRunner
   createAgentTool
   createAgentWorkflowTool
   AgentTemplateRegistry
   AgentWorkflowExecutor
 
-@mido/toolkit-core
+@mido-agent/toolkit-core
   workspace tools
   search tools
   browser tools

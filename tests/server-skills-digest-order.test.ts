@@ -34,7 +34,7 @@ description: Check digest ordering.
         }
       };
     });
-    const { loadAgentSkillsFromDirectory } = await import('@mido/server-sdk');
+    const { loadAgentSkillsFromDirectory } = await import('@mido-agent/server-sdk');
 
     const [normalSkill] = await loadAgentSkillsFromDirectory(rootDir);
     reverseReferences = true;

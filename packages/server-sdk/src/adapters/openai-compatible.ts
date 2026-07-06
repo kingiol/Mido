@@ -6,7 +6,7 @@ import {
   type ModelProviderMetadata,
   type ModelUsage,
   type ToolDefinition
-} from '@mido/protocol-core';
+} from '@mido-agent/protocol-core';
 
 import type { ModelAdapterCapabilities } from '../capabilities.js';
 import type { ModelAdapter, ModelAdapterEvent, ModelAdapterRunInput } from '../runner.js';

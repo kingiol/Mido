@@ -4,7 +4,7 @@ import { join } from 'node:path';
 
 import { describe, expect, it } from 'vitest';
 
-import type { JSONSchema } from '@mido/protocol-core';
+import type { JSONSchema } from '@mido-agent/protocol-core';
 
 import {
   createBrowserAutomationTools,

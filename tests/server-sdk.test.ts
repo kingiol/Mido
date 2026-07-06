@@ -2,7 +2,7 @@ import { mkdtemp, readFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 
-import { buildRunTrace, type AgentMessage, type CoreEvent, type JsonObject, type RunResumeRequest, type RunStartRequest } from '@mido/protocol-core';
+import { buildRunTrace, type AgentMessage, type CoreEvent, type JsonObject, type RunResumeRequest, type RunStartRequest } from '@mido-agent/protocol-core';
 import {
   DEFAULT_STORAGE_SCOPE,
   FileSystemEventStore,
@@ -21,7 +21,7 @@ import {
   type ModelAdapterRunInput,
   type StorageScope,
   type ThreadMessageIndexEntry
-} from '@mido/server-sdk';
+} from '@mido-agent/server-sdk';
 
 const numberSchema = { type: 'number' } as const;
 const valueInputSchema = {

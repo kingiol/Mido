@@ -1,10 +1,10 @@
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StreamableHTTPClientTransport, type StreamableHTTPClientTransportOptions } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
 import type { Tool as McpTool } from '@modelcontextprotocol/sdk/types.js';
-import { MIDO_SDK_VERSION, nowIso, stableStringify, type JsonObject, type JsonValue, type JSONSchema } from '@mido/protocol-core';
+import { MIDO_SDK_VERSION, nowIso, stableStringify, type JsonObject, type JsonValue, type JSONSchema } from '@mido-agent/protocol-core';
 
 export type { McpTool };
-export { MIDO_PROTOCOL_VERSION, MIDO_SDK_VERSION } from '@mido/protocol-core';
+export { MIDO_PROTOCOL_VERSION, MIDO_SDK_VERSION } from '@mido-agent/protocol-core';
 
 export interface McpHttpClientOptions {
   url: string | URL;

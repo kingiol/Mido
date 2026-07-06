@@ -1,10 +1,10 @@
 import { useState, useSyncExternalStore, type CSSProperties, type FormEvent } from 'react';
 
-import { createAgentClient, type AgentClient, type AgentTransport, type ClearConversationOptions, type SendMessageOptions } from '@mido/client-core';
-import type { ToolCallSnapshot } from '@mido/client-core';
-import type { CoreEvent, RunCancelRequest, RunResumeRequest, RunStartRequest } from '@mido/protocol-core';
+import { createAgentClient, type AgentClient, type AgentTransport, type ClearConversationOptions, type SendMessageOptions } from '@mido-agent/client-core';
+import type { ToolCallSnapshot } from '@mido-agent/client-core';
+import type { CoreEvent, RunCancelRequest, RunResumeRequest, RunStartRequest } from '@mido-agent/protocol-core';
 
-export { MIDO_PROTOCOL_VERSION, MIDO_SDK_VERSION } from '@mido/client-core';
+export { MIDO_PROTOCOL_VERSION, MIDO_SDK_VERSION } from '@mido-agent/client-core';
 export type {
   AgentClient,
   AgentTransport,
@@ -36,7 +36,7 @@ export type {
   RetryRunOptions,
   SendMessageOptions,
   ToolCallSnapshot
-} from '@mido/client-core';
+} from '@mido-agent/client-core';
 export {
   connectMcpHttpClient,
   createAgentClient,
@@ -48,7 +48,7 @@ export {
   McpConnectionUnavailableError,
   refreshMcpClientTools,
   registerManagedMcpHttpClientTools
-} from '@mido/client-core';
+} from '@mido-agent/client-core';
 
 export interface BrowserSseTransportOptions {
   runUrl: string;

@@ -44,7 +44,7 @@ The server indexes only the frontmatter first. Full instructions are loaded only
 import {
   createAgentRunner,
   createAgentSkillRegistry
-} from '@mido/server-sdk';
+} from '@mido-agent/server-sdk';
 
 const skillRegistry = await createAgentSkillRegistry({
   rootDirs: ['./skills'],
@@ -79,7 +79,7 @@ await client.sendMessage('Please triage this ticket.', {
 
 If `enabledSkills` is omitted, the server selects skills from user text using skill name, id, keywords, and description terms.
 
-Native clients should use `createAgentSkillManager` from `@mido/client-core` to track local skill state and inject enabled skill refs into run metadata:
+Native clients should use `createAgentSkillManager` from `@mido-agent/client-core` to track local skill state and inject enabled skill refs into run metadata:
 
 ```ts
 const skillManager = createAgentSkillManager({ store });
@@ -167,7 +167,7 @@ import {
   createAgentSkillRegistry,
   createAgentSkillScriptTool,
   createDockerAgentSkillSandbox
-} from '@mido/server-sdk';
+} from '@mido-agent/server-sdk';
 
 const skillRegistry = await createAgentSkillRegistry({
   rootDirs: ['./skills'],

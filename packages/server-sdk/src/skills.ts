@@ -3,7 +3,7 @@ import { spawn } from 'node:child_process';
 import { lstat, readdir, readFile } from 'node:fs/promises';
 import path from 'node:path';
 
-import type { JsonObject, JsonValue } from '@mido/protocol-core';
+import type { JsonObject, JsonValue } from '@mido-agent/protocol-core';
 
 import type { ServerToolRuntimeDefinition, ToolExecutionContext } from './runner.js';
 import type { SystemPromptContext } from './system-prompt.js';

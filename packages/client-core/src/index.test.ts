@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { createAgentClient, type AgentClientSnapshot, type AgentTransport } from './index.js';
-import type { CoreEvent } from '@mido/protocol-core';
+import type { CoreEvent } from '@mido-agent/protocol-core';
 
 const runId = 'run_test';
 const messageId = 'msg_assistant';

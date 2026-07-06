@@ -1,5 +1,5 @@
 {
-  "name": "@mido/conformance",
+  "name": "@mido-agent/conformance",
   "version": "0.1.0",
   "type": "module",
   "main": "./dist/index.cjs",
@@ -13,8 +13,8 @@
     }
   },
   "dependencies": {
-    "@mido/protocol-core": "workspace:*",
-    "@mido/protocol-agui": "workspace:*"
+    "@mido-agent/protocol-core": "workspace:*",
+    "@mido-agent/protocol-agui": "workspace:*"
   },
   "scripts": {
     "build": "tsup src/index.ts --format esm,cjs --dts"

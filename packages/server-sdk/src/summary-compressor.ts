@@ -1,4 +1,4 @@
-import { createId, nowIso, stableStringify, type AgentMessage } from '@mido/protocol-core';
+import { createId, nowIso, stableStringify, type AgentMessage } from '@mido-agent/protocol-core';
 
 import type { SummaryToolFact } from './summary-tool-facts.js';
 import { SUMMARY_COMPRESSOR_SYSTEM_PROMPT } from './prompts/summary-compressor.js';

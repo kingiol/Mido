@@ -1,4 +1,4 @@
-import type { AgentMessage, JsonObject, ToolResultPart } from '@mido/protocol-core';
+import type { AgentMessage, JsonObject, ToolResultPart } from '@mido-agent/protocol-core';
 
 export interface SummaryToolFact {
   messageId: string;

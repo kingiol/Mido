@@ -7,7 +7,7 @@ import {
   type JsonObject,
   type JsonValue,
   type ToolDefinition
-} from '@mido/protocol-core';
+} from '@mido-agent/protocol-core';
 
 import type {
   AgentRunner,

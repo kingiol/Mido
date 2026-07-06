@@ -1,4 +1,4 @@
-import type { JsonObject, ModelProviderMetadata, ModelUsage, ToolDefinition } from '@mido/protocol-core';
+import type { JsonObject, ModelProviderMetadata, ModelUsage, ToolDefinition } from '@mido-agent/protocol-core';
 
 import type { ModelAdapterCapabilities } from '../capabilities.js';
 import type { ModelAdapter, ModelAdapterEvent, ModelAdapterRunInput } from '../runner.js';

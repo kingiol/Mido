@@ -8,9 +8,9 @@ import {
   useAgentRun,
   usePendingInteractiveTools,
   useToolCalls,
-} from "@mido/client-web";
-import type { ClientSkillStore, ClientSkillSummary } from "@mido/client-web";
-import { buildRunTrace, type AgentMessage } from "@mido/protocol-core";
+} from "@mido-agent/client-web";
+import type { ClientSkillStore, ClientSkillSummary } from "@mido-agent/client-web";
+import { buildRunTrace, type AgentMessage } from "@mido-agent/protocol-core";
 
 import { exportEventsAsJsonl } from "./export-jsonl.js";
 import { DEMO_CLIENT_SYSTEM_PROMPT } from "../prompts.js";

@@ -1,5 +1,5 @@
 {
-  "name": "@mido/server-sdk",
+  "name": "@mido-agent/server-sdk",
   "version": "0.1.0",
   "type": "module",
   "main": "./dist/index.cjs",
@@ -13,8 +13,8 @@
     }
   },
   "dependencies": {
-    "@mido/mcp-core": "workspace:*",
-    "@mido/protocol-core": "workspace:*",
+    "@mido-agent/mcp-core": "workspace:*",
+    "@mido-agent/protocol-core": "workspace:*",
     "redis": "^6.0.0"
   },
   "scripts": {

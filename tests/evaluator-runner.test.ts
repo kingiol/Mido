@@ -1,5 +1,5 @@
-import type { CoreEvent } from '@mido/protocol-core';
-import { gradeEvalCase, parseFixtureEvalCasesJsonl, runEvalSuite } from '@mido/evaluator';
+import type { CoreEvent } from '@mido-agent/protocol-core';
+import { gradeEvalCase, parseFixtureEvalCasesJsonl, runEvalSuite } from '@mido-agent/evaluator';
 
 describe('evaluator runner and deterministic graders', () => {
   it('grades text, event sequence, tool usage, status, and error expectations', () => {

@@ -8,7 +8,7 @@ import {
   type AgentMessage,
   type ClientToolDefinition,
   type RunStartRequest
-} from '@mido/protocol-core';
+} from '@mido-agent/protocol-core';
 import {
   estimateModelInputTokens,
   InMemorySessionStore,
@@ -23,7 +23,7 @@ import {
   type ModelAdapter,
   type ModelAdapterEvent,
   type ModelAdapterRunInput
-} from '@mido/server-sdk';
+} from '@mido-agent/server-sdk';
 
 describe('summary messages', () => {
   it('allows summary messages and run context budget in protocol schemas', () => {

@@ -12,7 +12,7 @@ import {
   type JsonObject,
   type RunCheckpoint,
   type ToolResultEnvelope
-} from '@mido/protocol-core';
+} from '@mido-agent/protocol-core';
 
 export interface StorageScope {
   segments: string[];

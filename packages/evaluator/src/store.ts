@@ -1,7 +1,7 @@
 import { readdir, readFile } from 'node:fs/promises';
 import path from 'node:path';
 
-import type { CoreEvent } from '@mido/protocol-core';
+import type { CoreEvent } from '@mido-agent/protocol-core';
 
 import { aggregateEvalSuite, calculateRunMetrics } from './metrics.js';
 import { renderEvalReport } from './report.js';

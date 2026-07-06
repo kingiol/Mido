@@ -1,5 +1,5 @@
-import { buildDeepSeekRequest, normalizeDeepSeekStream } from '@mido/server-sdk';
-import { normalizeToolDefinition, type AgentMessage, type ToolDefinition } from '@mido/protocol-core';
+import { buildDeepSeekRequest, normalizeDeepSeekStream } from '@mido-agent/server-sdk';
+import { normalizeToolDefinition, type AgentMessage, type ToolDefinition } from '@mido-agent/protocol-core';
 
 const weatherTool: ToolDefinition = {
   name: 'getWeather',

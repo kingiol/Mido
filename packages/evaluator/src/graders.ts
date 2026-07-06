@@ -1,4 +1,4 @@
-import { buildRunTrace, type CoreEvent, type JsonObject, type JsonValue } from '@mido/protocol-core';
+import { buildRunTrace, type CoreEvent, type JsonObject, type JsonValue } from '@mido-agent/protocol-core';
 
 import type { EvalCaseGradeInput, EvalCaseGradeResult, EvalExpectation } from './types.js';
 

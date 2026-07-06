@@ -1,4 +1,4 @@
-import type { AgentMessage } from '@mido/protocol-core';
+import type { AgentMessage } from '@mido-agent/protocol-core';
 
 export function selectSummaryWindowMessages(messages: AgentMessage[]): AgentMessage[] {
   const summaryIndex = findLastSummaryIndex(messages);

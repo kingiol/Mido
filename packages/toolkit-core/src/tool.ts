@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto';
 
-import type { JsonObject, JsonValue, JSONSchema, ToolExecutionPolicy } from '@mido/protocol-core';
+import type { JsonObject, JsonValue, JSONSchema, ToolExecutionPolicy } from '@mido-agent/protocol-core';
 
 import type { ToolkitToolDefinition } from './types.js';
 import { toJsonValue } from './validation.js';
@@ -32,7 +32,7 @@ export function createTool(options: CreateToolOptions): ToolkitToolDefinition {
     metadata: {
       policy: options.policy,
       toolkit: {
-        package: '@mido/toolkit-core'
+        package: '@mido-agent/toolkit-core'
       }
     },
     execute: options.execute

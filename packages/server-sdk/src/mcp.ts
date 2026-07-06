@@ -17,8 +17,8 @@ import {
   type McpTool,
   type McpToolClient,
   type McpToolMappingOptions
-} from '@mido/mcp-core';
-import type { JsonObject } from '@mido/protocol-core';
+} from '@mido-agent/mcp-core';
+import type { JsonObject } from '@mido-agent/protocol-core';
 
 import type { AgentRunner, ServerToolRuntimeDefinition, ToolExecutionContext } from './runner.js';
 

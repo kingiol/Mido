@@ -21,10 +21,10 @@ describe('release target resolver', () => {
       target: 'server-sdk',
       version: '0.1.0',
       kind: 'npm',
-      package_name: '@mido/server-sdk',
+      package_name: '@mido-agent/server-sdk',
       package_path: 'packages/server-sdk',
       tag: 'server-sdk-v0.1.0',
-      npm_filter: '@mido/server-sdk'
+      npm_filter: '@mido-agent/server-sdk'
     });
   });
 
@@ -44,7 +44,7 @@ describe('release target resolver', () => {
     expect(resolveReleaseTarget('client-web', '0.1.0')).toMatchObject({
       target: 'client-web',
       version: '0.1.0',
-      package_name: '@mido/client-web',
+      package_name: '@mido-agent/client-web',
       tag: 'client-web-v0.1.0'
     });
   });

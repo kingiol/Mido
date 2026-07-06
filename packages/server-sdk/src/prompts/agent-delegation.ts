@@ -1,4 +1,4 @@
-import type { JsonObject, JsonValue, ToolDefinition } from '@mido/protocol-core';
+import type { JsonObject, JsonValue, ToolDefinition } from '@mido-agent/protocol-core';
 
 import {
   buildMidoAgentHarnessPrompt,

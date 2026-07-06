@@ -1,5 +1,5 @@
-import { roundTripAgUiEvent } from '@mido/conformance';
-import type { CoreEvent } from '@mido/protocol-core';
+import { roundTripAgUiEvent } from '@mido-agent/conformance';
+import type { CoreEvent } from '@mido-agent/protocol-core';
 
 describe('protocol-agui', () => {
   it('round-trips core events without losing identifiers', () => {

@@ -1,4 +1,4 @@
-import type { JsonObject, JsonValue } from '@mido/protocol-core';
+import type { JsonObject, JsonValue } from '@mido-agent/protocol-core';
 
 export function readRequiredString(value: JsonValue | undefined, name: string): string {
   if (typeof value !== 'string' || value.length === 0) {

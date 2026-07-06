@@ -1,5 +1,5 @@
 {
-  "name": "@mido/protocol-core",
+  "name": "@mido-agent/protocol-core",
   "version": "0.1.0",
   "type": "module",
   "main": "./dist/index.cjs",

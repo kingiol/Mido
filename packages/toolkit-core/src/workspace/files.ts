@@ -2,7 +2,7 @@ import { constants } from 'node:fs';
 import { access, mkdir, readFile, stat, writeFile } from 'node:fs/promises';
 import { dirname } from 'node:path';
 
-import type { JsonObject, JsonValue } from '@mido/protocol-core';
+import type { JsonObject, JsonValue } from '@mido-agent/protocol-core';
 
 import { createTool } from '../tool.js';
 import type { CreateWorkspaceToolsOptions, ToolkitToolDefinition } from '../types.js';

@@ -1,6 +1,6 @@
 import { readFile, stat } from 'node:fs/promises';
 
-import type { JsonObject } from '@mido/protocol-core';
+import type { JsonObject } from '@mido-agent/protocol-core';
 
 import { createTool } from '../tool.js';
 import type { CreateWorkspaceToolsOptions, ToolkitToolDefinition } from '../types.js';

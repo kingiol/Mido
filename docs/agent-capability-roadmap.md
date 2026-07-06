@@ -11,8 +11,8 @@ Mido 现在最有价值的部分不是内置一个完整任务型 agent，而是
 
 ## 当前基础
 
-- agent loop 运行在服务端，由 `@mido/server-sdk` 负责。
-- 客户端通过 `@mido/client-core` 注册本地工具。
+- agent loop 运行在服务端，由 `@mido-agent/server-sdk` 负责。
+- 客户端通过 `@mido-agent/client-core` 注册本地工具。
 - 工具执行策略分成 `server`、`client_auto` 和 `client_interactive`。
 - 服务端已经支持 opt-in 的 `toolPolicy`，工具可以声明轻量 `metadata.policy`。
 - 服务端已经支持 Agent Skills：索引 `SKILL.md` frontmatter，按需加载被选中的 skill 正文，支持 `references/` 和 `assets/`；`scripts/` 只有显式配置 sandbox 后才能执行。
@@ -136,7 +136,7 @@ web demo 现在有 Event Timeline，但 tracing 应该成为 SDK 层能力。接
 
 ### 5. Provider 能力抽象（首版已完成）
 
-内部协议是 provider-neutral。首版已经在 `@mido/server-sdk` 增加 `ModelAdapterCapabilities`，并让 runner 在模型调用前检查明确不支持的组合。现有 adapter 覆盖 DeepSeek、Vercel AI stream 归一化、OpenAI-compatible Chat Completions 和 OpenAI Responses。
+内部协议是 provider-neutral。首版已经在 `@mido-agent/server-sdk` 增加 `ModelAdapterCapabilities`，并让 runner 在模型调用前检查明确不支持的组合。现有 adapter 覆盖 DeepSeek、Vercel AI stream 归一化、OpenAI-compatible Chat Completions 和 OpenAI Responses。
 
 需要覆盖的 provider 类型不止三类。更准确的分层是：
 
@@ -234,7 +234,7 @@ MCP 工具现在可以从远端 Streamable HTTP server 注册，也可以使用 
 
 已完成：
 
-- `@mido/mcp-core` 增加 `createManagedMcpConnection` 和 `createManagedMcpHttpConnection`。
+- `@mido-agent/mcp-core` 增加 `createManagedMcpConnection` 和 `createManagedMcpHttpConnection`。
 - managed connection 暴露 `getStatus`、`subscribe`、`healthCheck`、`reconnect`、`close`、`terminateSession` 和 `refreshTools`。
 - tool call 或 list tools 发现连接失效时，会标记 `degraded`，重连一次，再重试当前操作。
 - `refreshTools()` 返回 added、updated、removed、unchanged diff。

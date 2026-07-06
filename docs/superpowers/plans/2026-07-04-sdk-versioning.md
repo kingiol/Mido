@@ -70,39 +70,39 @@ import { join } from 'node:path';
 import {
   MIDO_PROTOCOL_VERSION as aguiProtocolVersion,
   MIDO_SDK_VERSION as aguiSdkVersion
-} from '@mido/protocol-agui';
+} from '@mido-agent/protocol-agui';
 import {
   MIDO_PROTOCOL_VERSION as clientCoreProtocolVersion,
   MIDO_SDK_VERSION as clientCoreSdkVersion
-} from '@mido/client-core';
+} from '@mido-agent/client-core';
 import {
   MIDO_PROTOCOL_VERSION as clientWebProtocolVersion,
   MIDO_SDK_VERSION as clientWebSdkVersion
-} from '@mido/client-web';
+} from '@mido-agent/client-web';
 import {
   MIDO_PROTOCOL_VERSION as conformanceProtocolVersion,
   MIDO_SDK_VERSION as conformanceSdkVersion
-} from '@mido/conformance';
+} from '@mido-agent/conformance';
 import {
   MIDO_PROTOCOL_VERSION as evaluatorProtocolVersion,
   MIDO_SDK_VERSION as evaluatorSdkVersion
-} from '@mido/evaluator';
+} from '@mido-agent/evaluator';
 import {
   MIDO_PROTOCOL_VERSION as mcpProtocolVersion,
   MIDO_SDK_VERSION as mcpSdkVersion
-} from '@mido/mcp-core';
+} from '@mido-agent/mcp-core';
 import {
   MIDO_PROTOCOL_VERSION,
   MIDO_SDK_VERSION
-} from '@mido/protocol-core';
+} from '@mido-agent/protocol-core';
 import {
   MIDO_PROTOCOL_VERSION as serverProtocolVersion,
   MIDO_SDK_VERSION as serverSdkVersion
-} from '@mido/server-sdk';
+} from '@mido-agent/server-sdk';
 import {
   MIDO_PROTOCOL_VERSION as toolkitProtocolVersion,
   MIDO_SDK_VERSION as toolkitSdkVersion
-} from '@mido/toolkit-core';
+} from '@mido-agent/toolkit-core';
 
 const repoRoot = process.cwd();
 const rootPackageJson = JSON.parse(readFileSync(join(repoRoot, 'package.json'), 'utf8')) as { version: string };
@@ -196,7 +196,7 @@ export { MIDO_PROTOCOL_VERSION, MIDO_SDK_VERSION } from './version.js';
 Add this export to each file listed below:
 
 ```ts
-export { MIDO_PROTOCOL_VERSION, MIDO_SDK_VERSION } from '@mido/protocol-core';
+export { MIDO_PROTOCOL_VERSION, MIDO_SDK_VERSION } from '@mido-agent/protocol-core';
 ```
 
 Files:
@@ -217,7 +217,7 @@ packages/evaluator/src/index.ts
 In `packages/mcp-core/src/index.ts`, change the protocol-core import to include `MIDO_SDK_VERSION`:
 
 ```ts
-import { MIDO_SDK_VERSION, nowIso, stableStringify, type JsonObject, type JsonValue, type JSONSchema } from '@mido/protocol-core';
+import { MIDO_SDK_VERSION, nowIso, stableStringify, type JsonObject, type JsonValue, type JSONSchema } from '@mido-agent/protocol-core';
 ```
 
 Then replace:
@@ -594,8 +594,8 @@ Add this section before `## Core design` in `README.md`:
 Use the same Mido SDK version across server and client packages unless the compatibility matrix says otherwise.
 
 ```bash
-pnpm add @mido/server-sdk@0.1.0 @mido/client-core@0.1.0
-pnpm add @mido/client-web@0.1.0
+pnpm add @mido-agent/server-sdk@0.1.0 @mido-agent/client-core@0.1.0
+pnpm add @mido-agent/client-web@0.1.0
 ```
 
 For Swift Package Manager, depend on a repository tag:
@@ -732,8 +732,8 @@ git commit -m "ci: add SDK release check workflow"
 Create `.github/workflows/publish-sdk.yml` so these tags publish one SDK at a time:
 
 ```text
-server-sdk-v0.2.0 -> @mido/server-sdk
-client-web-v0.2.0 -> @mido/client-web
+server-sdk-v0.2.0 -> @mido-agent/server-sdk
+client-web-v0.2.0 -> @mido-agent/client-web
 v0.2.0 -> MidoClient Swift Package
 ```
 

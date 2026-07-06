@@ -2,8 +2,8 @@ import { mkdir, mkdtemp, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 
-import type { CoreEvent } from '@mido/protocol-core';
-import { evaluateEventStore } from '@mido/evaluator';
+import type { CoreEvent } from '@mido-agent/protocol-core';
+import { evaluateEventStore } from '@mido-agent/evaluator';
 
 describe('evaluator store scanner', () => {
   it('evaluates real event store JSONL files without treating run errors as structural failures', async () => {

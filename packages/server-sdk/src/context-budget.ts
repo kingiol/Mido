@@ -1,4 +1,4 @@
-import { stableStringify, type AgentMessage, type RunContextBudget, type ToolDefinition } from '@mido/protocol-core';
+import { stableStringify, type AgentMessage, type RunContextBudget, type ToolDefinition } from '@mido-agent/protocol-core';
 
 export interface ContextBudgetInput {
   contextWindowTokens?: number;

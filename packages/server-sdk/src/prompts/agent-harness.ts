@@ -1,4 +1,4 @@
-import type { ToolDefinition, ToolExecutionPolicy } from '@mido/protocol-core';
+import type { ToolDefinition, ToolExecutionPolicy } from '@mido-agent/protocol-core';
 
 export type PromptSectionBodyMode = 'trusted' | 'quoted';
 

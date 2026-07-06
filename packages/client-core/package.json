@@ -1,5 +1,5 @@
 {
-  "name": "@mido/client-core",
+  "name": "@mido-agent/client-core",
   "version": "0.1.0",
   "type": "module",
   "main": "./dist/index.cjs",
@@ -13,8 +13,8 @@
     }
   },
   "dependencies": {
-    "@mido/mcp-core": "workspace:*",
-    "@mido/protocol-core": "workspace:*"
+    "@mido-agent/mcp-core": "workspace:*",
+    "@mido-agent/protocol-core": "workspace:*"
   },
   "scripts": {
     "build": "tsup src/index.ts --format esm,cjs --dts"

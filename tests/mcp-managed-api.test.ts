@@ -1,6 +1,6 @@
-import * as clientCore from '@mido/client-core';
-import * as clientWeb from '@mido/client-web';
-import * as serverSdk from '@mido/server-sdk';
+import * as clientCore from '@mido-agent/client-core';
+import * as clientWeb from '@mido-agent/client-web';
+import * as serverSdk from '@mido-agent/server-sdk';
 
 describe('managed MCP public API', () => {
   it('does not export old unmanaged high-level helpers', () => {

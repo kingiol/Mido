@@ -7,8 +7,8 @@ import {
   type ModelAdapter,
   type ModelAdapterEvent,
   type ModelAdapterRunInput
-} from '@mido/server-sdk';
-import type { AgentMessage, CoreEvent, JsonObject, RunStartRequest } from '@mido/protocol-core';
+} from '@mido-agent/server-sdk';
+import type { AgentMessage, CoreEvent, JsonObject, RunStartRequest } from '@mido-agent/protocol-core';
 
 class FunctionModelAdapter implements ModelAdapter {
   constructor(private readonly handler: (input: ModelAdapterRunInput) => ModelAdapterEvent[] | Promise<ModelAdapterEvent[]>) {}
